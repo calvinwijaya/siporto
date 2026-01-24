@@ -1,0 +1,80 @@
+<div id="mahasiswaTab" class="container-fluid animate__animated animate__fadeIn">
+    <div class="d-flex align-items-center mb-4">
+        <div class="bg-primary text-white rounded p-2 me-3">
+            <i class="bi bi-mortarboard fs-3"></i>
+        </div>
+        <div>
+            <h3 class="fw-bold mb-0">Portofolio Mahasiswa</h3>
+            <p class="text-muted mb-0">Cek capaian individu mahasiswa berdasarkan NIM dan Nama</p>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Pilih Jenjang</label>
+                    <select id="jenjangSelect" class="form-select" onchange="loadMahasiswaList()">
+                        <option value="">-- Pilih Jenjang --</option>
+                        <option value="S1">Sarjana (S1)</option>
+                        <option value="S2">Magister (S2)</option>
+                        <option value="S3">Doktor (S3)</option>
+                    </select>
+                </div>
+
+                <div class="col-md-5 position-relative">
+                    <label class="form-label fw-bold">Cari Mahasiswa</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                        <input type="text" id="searchNIM" class="form-control" placeholder="Ketik nama atau NIM..." oninput="filterMahasiswa()" autocomplete="off">
+                    </div>
+                    <div id="nimSuggestions" class="list-group position-absolute w-100 z-3 shadow-sm d-none" style="max-height: 200px; overflow-y: auto;"></div>
+                </div>
+
+                <div class="col-md-3">
+                    <button class="btn btn-primary w-100 shadow-sm" onclick="loadStudentPortfolio()">
+                        <i class="bi bi-eye me-2"></i>Tampilkan Portofolio
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="studentCourses" class="mb-4"></div>
+
+    <div id="portfolioResult" style="display: none;">
+        <div class="col-12 mb-5">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-0 pt-3">
+                    <h6 class="fw-bold text-primary"><i class="bi bi-graph-up-arrow me-2"></i>Capaian CPL Mahasiswa</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-center mb-4">
+                        <div style="position: relative; height:350px; width: 100%; max-width: 500px;">
+                            <canvas id="studentCPLChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="table-responsive-container">
+                        <div id="studentCPLTable"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 mb-5">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-0 pt-3">
+                    <h6 class="fw-bold text-info"><i class="bi bi-bar-chart-steps me-2"></i>Capaian PI Mahasiswa</h6>
+                </div>
+                <div class="card-body">
+                    <div style="position: relative; height:350px; width: 100%;" class="mb-4">
+                        <canvas id="studentPiChart"></canvas>
+                    </div>
+                    <div class="table-responsive-container">
+                        <div id="studentPiTable"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
