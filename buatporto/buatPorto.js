@@ -1,57 +1,4 @@
-// =============================================================================================================
-// Mapping CPL dan PI berdasarkan jenjang
-const jenjangCPLData = {
-    S1: {
-        cplList: ["a","b","c","d","e","f","g","h","i","j","k"],
-        piMap: {
-            a: ["a1", "a2", "a3"],
-            b: ["b1", "b2", "b3", "b4"],
-            c: ["c1", "c2", "c3", "c4", "c5"],
-            d: ["d1", "d2", "d3"],
-            e: ["e1", "e2", "e3", "e4"],
-            f: ["f1", "f2"],
-            g: ["g1", "g2", "g3", "g4", "g5"],
-            h: ["h1", "h2"],
-            i: ["i1", "i2"],
-            j: ["j1", "j2"],
-            k: ["k1", "k2", "k3", "k4"]
-        }
-    },
-    S2: {
-        cplList: ["a","b","c","d","e","f","g","h"],
-        piMap: {
-            a: ["a1", "a2", "a3"],
-            b: ["b1", "b2", "b3", "b4"],
-            c: ["c1", "c2", "c3"],
-            d: ["d1", "d2", "d3", "d4", "d5"],
-            e: ["e1", "e2"],
-            f: ["f1", "f2", "f3", "f4"],
-            g: ["g1", "g2", "g3", "g4", "g5"],
-            h: ["h1", "h2", "h3", "h4"]
-        }
-    },
-    S3: {
-        cplList: ["a","b","c","d","e","f","g","h"],
-        piMap: {
-            a: ["a1", "a2"],
-            b: ["b1", "b2"],
-            c: ["c1", "c2", "c3"],
-            d: ["d1", "d2", "d3", "d4"],
-            e: ["e1", "e2", "e3", "e4"],
-            f: ["f1", "f2", "f3"],
-            g: ["g1", "g2", "g3"],
-            h: ["h1", "h2", "h3", "h4"]
-        }
-    }
-};
-
-// =============================================================================================================
-// Global State
-let mkList = [];
-let selectedJenjang = null;
-const selectedCPL = new Set();
-let assessmentCount = 0;
-
+{
 // =============================================================================================================
 // Fungsi cardbody
 // 1. Inisialisasi Tombol Jenjang saat Script Dimuat
@@ -531,27 +478,32 @@ function generateCSVTemplate() {
     link.click();
 }
 
-document.getElementById('csvUpload').addEventListener('change', function () {
-    const file = this.files[0];
-    const statusDiv = document.getElementById('uploadStatus'); 
-    
-    if (!file || !statusDiv) return; 
+const csvInput = document.getElementById('csvUpload');
 
-    if (file.name.endsWith('.csv')) {
-        statusDiv.innerHTML = `
-            <div class="alert alert-success d-flex align-items-center py-2" role="alert">
-                <i class="bi bi-check-circle-fill me-2"></i>
-                <div>File <strong>${file.name}</strong> berhasil diunggah!</div>
-            </div>`;
-    } else {
-        statusDiv.innerHTML = `
-            <div class="alert alert-danger d-flex align-items-center py-2" role="alert">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                <div>Format file salah! Gunakan file .csv</div>
-            </div>`;
-        this.value = ""; 
-    }
-});
+// Cek apakah elemen ada di halaman sebelum menambah Listener
+if (csvInput) {
+    csvInput.addEventListener('change', function () {
+        const file = this.files[0];
+        const statusDiv = document.getElementById('uploadStatus'); 
+        
+        if (!file || !statusDiv) return; 
+
+        if (file.name.endsWith('.csv')) {
+            statusDiv.innerHTML = `
+                <div class="alert alert-success d-flex align-items-center py-2" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    <div>File <strong>${file.name}</strong> berhasil diunggah!</div>
+                </div>`;
+        } else {
+            statusDiv.innerHTML = `
+                <div class="alert alert-danger d-flex align-items-center py-2" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <div>Format file salah! Gunakan file .csv</div>
+                </div>`;
+            this.value = ""; 
+        }
+    });
+}
 
 // =============================================================================================================
 // Fungsi Generate CPMK Portfolio
@@ -1193,3 +1145,4 @@ async function sendToSheet() {
 //         if (overlay) overlay.style.display = "none";
 //     }
 // }
+}
