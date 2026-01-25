@@ -948,7 +948,7 @@ function renderPIChart(allPIs, usedData) {
 
 // =============================================================================================================
 // Fungsi untuk mengirim data nilai ke GAS
-async function sendToSheet() {
+window.sendToSheet = async function() {
     const mkName = document.getElementById('searchMK').value.trim();
     const kelas = document.getElementById('kelas').value.trim();
     const tahun = document.getElementById('tahun').value.trim();
