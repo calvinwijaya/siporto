@@ -55,7 +55,7 @@ function processAndDisplayRekap(rows, jenjang) {
         });
     });
 
-    const avgCPL = cplKeys.map(k => ({ label: k.toUpperCase(), value: cplCounts[k] ? cplSums[k] / cplCounts[k] : 0 }));
+    const avgCPL = cplKeys.map(k => ({ label: k.toLowerCase(), value: cplCounts[k] ? cplSums[k] / cplCounts[k] : 0 }));
     const avgPI = piKeys.map(k => ({ label: k.toLowerCase(), value: piCounts[k] ? piSums[k] / piCounts[k] : 0 }));
 
     drawCPLRadarChart(avgCPL);

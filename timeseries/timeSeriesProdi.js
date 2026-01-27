@@ -80,7 +80,7 @@ async function loadTimeProdiPortfolio() {
             });
         });
 
-        drawTimeSeriesBarChart(cplKeys.map(k => `CPL ${k.toUpperCase()}`), datasets, "prodiChartContainer");
+        drawTimeSeriesBarChart(cplKeys.map(k => `CPL ${k.toLowerCase()}`), datasets, "prodiChartContainer");
 
     } catch (err) {
         console.error("Gagal memuat data time series:", err);
