@@ -1071,78 +1071,161 @@ window.sendToSheet = async function() {
 }
 
 // =============================================================================================================
-// // Fungsi untuk mengunduh canvas sebagai gambar PNG
-// function downloadChart(canvasId, fileName) {
-//     const canvas = document.getElementById(canvasId);
-//     if (!canvas) return;
+// Fungsi untuk mengunduh canvas sebagai gambar PNG
+function downloadChart(canvasId, fileName) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
     
-//     // Buat link download sementara
-//     const link = document.createElement('a');
-//     link.download = `${fileName}.png`;
-//     link.href = canvas.toDataURL('image/png');
-//     link.click();
-// }
+    // Buat link download sementara
+    const link = document.createElement('a');
+    link.download = `${fileName}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+}
 
-// // Fungsi Download Porto yang sudah disederhanakan (Tanpa Image Module)
-// async function generateAndDownloadFullPortfolio() {
-//     const mkName = document.getElementById('searchMK').value.trim();
-//     const overlay = document.getElementById("loadingOverlay");
+// Fungsi Download Porto yang sudah disederhanakan (Tanpa Image Module)
+window.generateAndDownloadFullPortfolio = async function() {
+    const mkName = document.getElementById('searchMK').value.trim();
+    const kelas = document.getElementById("kelas").value;
+    const tahunSemesterRaw = document.getElementById("tahun").value;
+    const evaluasiText = document.getElementById("evaluasi").value;
+    const rencanaText = document.getElementById("rencana").value;
+    const overlay = document.getElementById("loadingOverlay");
+    const user = JSON.parse(sessionStorage.getItem("user"));
+    const emailUser = user?.email;
     
-//     if (!mkName) return alert("Silakan pilih Mata Kuliah terlebih dahulu.");
+    if (!mkName) {
+        return Swal.fire({
+            icon: 'warning',
+            title: 'Mata Kuliah Belum Dipilih',
+            text: 'Silakan pilih Mata Kuliah terlebih dahulu sebelum mengunduh portofolio.',
+            confirmButtonColor: '#0d6efd'
+        });
+    }
     
-//     try {
-//         if (overlay) overlay.style.display = "flex";
+    try {
+        if (overlay) overlay.style.display = "flex";
 
-//         // 1. Ambil Template dari GAS (Sama seperti sebelumnya)
-//         const scriptUrl = 'URL_GAS_ANDA'; 
-//         const params = new URLSearchParams({ nama: mkName, jenjang: selectedJenjang || "" });
-//         const response = await fetch(`${scriptUrl}?${params.toString()}`);
-//         const result = await response.json();
+        // 0. Ambil data dosen dari GAS
+        let dosen1 = "", dosen2 = "", dosen3 = "";
+        if (emailUser && mkName) {
+            try {
+                const gasUrl = `https://script.google.com/macros/s/AKfycbzNdt6OArAWAPyHaCGQKneBnFtRj6DcP4Cyxey_o9Sb47CTGc26hOLpnmMh_4mZ_NA/exec?email=${encodeURIComponent(emailUser)}&namaMK=${encodeURIComponent(mkName)}`;
+                const gasRes = await fetch(gasUrl);
+                const gasData = await gasRes.json();
+                
+                // Konversi Kode ke Nama Lengkap menggunakan helper dari config.js
+                dosen1 = (gasData.kode1 && gasData.kode1 !== "-") ? getNamaDosen(gasData.kode1) : "";
+                dosen2 = (gasData.kode2 && gasData.kode2 !== "-") ? getNamaDosen(gasData.kode2) : "";
+                dosen3 = (gasData.kode3 && gasData.kode3 !== "-") ? getNamaDosen(gasData.kode3) : "";
+            } catch (err) {
+                console.warn("Gagal mengambil data dosen pengampu:", err);
+            }
+        }
 
-//         if (result.status !== "SUCCESS") throw new Error("Template tidak ditemukan.");
+        // 1. Ambil Template
+        const response = await fetch('template/Template_Portofolio.docx');
+        if (!response.ok) {
+            throw new Error("File template tidak ditemukan di folder template/Template_Portofolio.docx");
+        }
+        const arrayBuffer = await response.arrayBuffer();
 
-//         // 2. Proses DOCX dengan PizZip & Docxtemplater Dasar (Gratis)
-//         const binaryString = atob(result.base64);
-//         const PizZipLib = window.PizZip;
-//         const DocxtemplaterLib = window.docxtemplater;
+        // 2. Logika Tahun-Semester
+        // Jika 2025-1 -> 2025 Gasal, Jika 2025-2 -> 2025 Genap
+        const [tahun, sem] = tahunSemesterRaw.split('-');
+        const displaySemester = `${tahun} ${sem === "1" ? "Gasal" : "Genap"}`;
 
-//         const zip = new PizZipLib(binaryString);
-//         const doc = new DocxtemplaterLib(zip, {
-//             paragraphLoop: true,
-//             linebreaks: true
-//         });
+        // 3. Ambil Data Rencana Asesmen dari UI (Tabel)
+        const dataRencanaAsesmen = [];
+        document.querySelectorAll("#assessmentRows .assessment-row").forEach(row => {
+            const inputs = row.querySelectorAll("input");
+            dataRencanaAsesmen.push({
+                cpmk: row.querySelector(".cpmk-select").value,
+                tipe: row.querySelector(".tipe-select").value,
+                desc: inputs[0].value,
+                bobot: inputs[1].value,
+                maks: inputs[2].value,
+                cpl: row.querySelector(".cpl-select").value,
+                pi: row.querySelector(".pi-select").value
+            });
+        });
 
-//         // 3. Inject Data Teks dan Tabel
-//         doc.setData({
-//             MK: mkName,
-//             Kelas: document.getElementById("kelas").value,
-//             Evaluasi: document.getElementById("evaluasi").value,
-//             Rencana: document.getElementById("rencana").value,
-//             // Tabel sederhana menggunakan tabulasi \t
-//             Data_CPMK: (window.cpmkData || []).map(r => `${r.cpmk}\t${r.capaian}\t${r.evaluasi}`).join("\n"),
-//             Data_CPL: (window.cplData || []).map(r => `${r.cpl}\t${r.capaian}`).join("\n"),
-//             Data_PI: (window.piData || []).map(r => `${r.pi}\t${r.capaian}`).join("\n")
-//         });
+        const dataCPMK = (window.cpmkData || []).map(r => ({
+            cpmk: r.cpmk,
+            persentase: r.persentase + "%",
+            standar: r.standar,
+            capaian: r.capaian,
+            evaluasi: r.evaluasi
+        }));
 
-//         doc.render();
+        const dataCPL = (window.cplData || []).map(r => ({
+            cpl: r.cpl,
+            capaian: r.capaian,
+            evaluasi: r.evaluasi
+        }));
 
-//         const out = doc.getZip().generate({
-//             type: "blob",
-//             mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-//         });
+        const dataPI = (window.piData || []).map(r => ({
+            pi: r.pi,
+            capaian: r.capaian,
+            evaluasi: r.evaluasi
+        }));
 
-//         const link = document.createElement("a");
-//         link.href = URL.createObjectURL(out);
-//         link.download = `Portofolio_${mkName}.docx`;
-//         link.click();
+        // 4. Proses DOCX dengan PizZip & Docxtemplater
+        const PizZipLib = window.PizZip;
+        const DocxtemplaterLib = window.docxtemplater;
 
-//         alert("Dokumen berhasil diunduh. Silakan unduh gambar grafik secara manual dan tempelkan ke dalam dokumen.");
+        const zip = new PizZipLib(arrayBuffer);
+        const doc = new DocxtemplaterLib(zip, {
+            paragraphLoop: true,
+            linebreaks: true
+        });
 
-//     } catch (err) {
-//         console.error(err);
-//         alert(err.message);
-//     } finally {
-//         if (overlay) overlay.style.display = "none";
-//     }
-// }
+        // 5. Inject Data ke Placeholder Template
+        doc.setData({
+            NamaMK: mkName,
+            Kelas: kelas,
+            TahunSemester: displaySemester,
+            Evaluasi: evaluasiText || "-",
+            Pengembangan: rencanaText || "-",
+            DosenPengampu1: dosen1,
+            DosenPengampu2: dosen2,
+            DosenPengampu3: dosen3,
+            Rencana_Asesmen: dataRencanaAsesmen,
+            Tabel_CPMK: dataCPMK,
+            Tabel_CPL: dataCPL,
+            Tabel_PI: dataPI
+        });
+
+        doc.render();
+
+        const out = doc.getZip().generate({
+            type: "blob",
+            mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        });
+
+        // 6. Download File
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(out);
+        link.download = `Portofolio_${mkName}_${kelas}.docx`;
+        link.click();
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil Diunduh!',
+            html: `Dokumen <b>Portofolio_${mkName}</b> telah siap.<br><br><small class="text-muted">Catatan: Silakan tempelkan gambar grafik secara manual ke dalam dokumen.</small>`,
+            confirmButtonColor: '#198754'
+        });
+
+    } catch (err) {
+        console.error(err);
+        Swal.fire({
+            icon: 'error',
+            title: 'Terjadi Kesalahan',
+            text: err.message,
+            confirmButtonColor: '#dc3545'
+        });
+    } finally {
+        if (overlay) overlay.style.display = "none";
+    }
+}
 }
