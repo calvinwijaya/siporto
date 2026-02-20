@@ -1110,7 +1110,7 @@ window.generateAndDownloadFullPortfolio = async function() {
         let dosen1 = "", dosen2 = "", dosen3 = "";
         if (emailUser && mkName) {
             try {
-                const gasUrl = `https://script.google.com/macros/s/AKfycbyZBtdhcJbQhZU1tSrOJOKf9vmPbAcWel9vY-HjZ75YQtVBEM04OuiCKbnWDPT4rn54/exec?email=${encodeURIComponent(emailUser)}&namaMK=${encodeURIComponent(mkName)}`;
+                const gasUrl = `https://script.google.com/macros/s/AKfycbzftDz1B7ExqsOe5-BBNCdEGosZFC81Fvt9E0bd3niWYSsoGUvwNFUfzebkqX2q7qVS/exec?email=${encodeURIComponent(emailUser)}&namaMK=${encodeURIComponent(mkName)}`;
                 const gasRes = await fetch(gasUrl);
                 const gasData = await gasRes.json();
                 

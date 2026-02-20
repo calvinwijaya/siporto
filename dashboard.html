@@ -129,11 +129,57 @@
                 <br><br><strong>Silakan pilih menu di sebelah kiri untuk membuat portofolio!</strong>
             </p>
 
-            <!-- tabel disini -->
+            <div class="row mt-4 mb-4">
+                <div class="col-12">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <label for="filterSemester" class="form-label fw-bold text-secondary mb-2">
+                                <i class="bi bi-calendar-week me-1"></i> Pilih Tahun-Semester:
+                            </label>
+                            <select id="filterSemester" class="form-select form-select-lg border-primary">
+                                <option value="">Memuat data semester...</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+                
+            <div class="row mb-5">
+                <div class="col-md-6 mb-3 mb-md-0">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <h5 class="fw-bold text-success mb-1">Progres Portofolio Anda</h5>
+                            <p class="text-muted small mb-3">Berdasarkan Mata Kuliah yang Anda ampu</p>
+                            <div style="width: 220px; height: 220px; margin: 0 auto; position: relative;">
+                                <canvas id="chartPersonal"></canvas>
+                                <div id="chartPersonalText" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; font-weight: bold; font-size: 1.5rem; color: #198754;">
+                                    0%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body text-center">
+                            <h5 class="fw-bold text-primary mb-1">Progres Departemen</h5>
+                            <p class="text-muted small mb-3">Berdasarkan Total Seluruh Mata Kuliah</p>
+                            <div style="width: 220px; height: 220px; margin: 0 auto; position: relative;">
+                                <canvas id="chartGlobal"></canvas>
+                                <div id="chartGlobalText" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; font-weight: bold; font-size: 1.5rem; color: #0d6efd;">
+                                    0%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="mt-5">
                 <div class="d-flex align-items-center mb-3">
                     <h5 class="text-danger fw-bold mb-0">
-                        <i class="bi bi-exclamation-triangle-fill me-2"></i> Daftar MK Belum Upload Nilai CPL/PI
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i> Daftar MK Belum Upload Nilai CPL/PI - <span id="judulBelumUpload">Memuat...</span>
                     </h5>
                 </div>
                 <div class="table-responsive shadow-sm rounded">
@@ -149,11 +195,33 @@
                         <tbody id="tableBelumUpload">
                             <tr>
                                 <td colspan="4" class="text-center text-muted py-4">
-                                    <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-                                    Memuat data mata kuliah...
+                                    <div class="spinner-border spinner-border-sm me-2"></div> Memuat data...
                                 </td>
                             </tr>
                         </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="mt-5 mb-5">
+                <div class="d-flex align-items-center mb-3">
+                    <h5 class="text-success fw-bold mb-0">
+                        <i class="bi bi-check-circle-fill me-2"></i> Daftar MK Sudah Upload Nilai CPL/PI - <span id="judulSudahUpload">Memuat...</span>
+                    </h5>
+                </div>
+                <div class="table-responsive shadow-sm rounded">
+                    <table class="table table-bordered table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col" class="text-center" width="5%">No</th>
+                                <th scope="col" width="20%">Semester</th>
+                                <th scope="col" width="20%">Kode MK</th>
+                                <th scope="col">Nama Mata Kuliah</th>
+                                <th scope="col" width="15%" class="text-center">Kelas Selesai</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableSudahUpload">
+                            </tbody>
                     </table>
                 </div>
             </div>
@@ -168,59 +236,176 @@
 
     <script>
         
-        const URL_GAS_CHECKER = "https://script.google.com/macros/s/AKfycbzzNG57TTQ41yyu4M_9YwI-V9vxBwqXkhh-rhA082qOpdAFfRqRL0RmYxl-oYY2AKD9Xg/exec"
+        const URL_GAS_CHECKER = "https://script.google.com/macros/s/AKfycbyI51k9LdqnZ9l2UukVqABqU5bABiXzkiwFuWUbA-leexlb2nduC1Ag7UwL3Sq4SMdsYA/exec"
+
+        // Variabel Global
+        let globalData = null;
+        let myChartPersonal = null; 
+        let myChartGlobal = null;
 
         const user = JSON.parse(sessionStorage.getItem("user"));
         if (!user) {
             window.location.href = 'index.html';
         } else {
             document.getElementById("userNama").textContent = user.nama;
-            loadTabelBelumUpload(user.email);
+            initDashboard(user.email);
         }
 
-        async function loadTabelBelumUpload(emailUser) {
-            const tbody = document.getElementById("tableBelumUpload");
-
+        async function initDashboard(emailUser) {
             try {
-                // Hanya 1 kali fetch, sistem GAS yang melakukan sisanya
                 const response = await fetch(`${URL_GAS_CHECKER}?email=${encodeURIComponent(emailUser)}`);
-                const mkBelumUpload = await response.json();
+                globalData = await response.json(); 
 
-                // Kosongkan tabel loading
-                tbody.innerHTML = "";
+                // Ambil daftar semester unik dari GAS (Bisa diambil dari kunci objek globalStats)
+                const semesterArray = Object.keys(globalData.globalStats).sort().reverse(); 
 
-                if (mkBelumUpload.length === 0) {
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="4" class="text-center text-success py-4">
-                                <strong>Luar Biasa!</strong> Semua mata kuliah Anda telah diupload nilainya.
-                            </td>
-                        </tr>
-                    `;
+                const selectEl = document.getElementById("filterSemester");
+                selectEl.innerHTML = ""; 
+                
+                if(semesterArray.length === 0) {
+                    selectEl.innerHTML = `<option value="">Tidak ada data semester tersedia</option>`;
                     return;
                 }
 
-                // Render ke tabel
-                mkBelumUpload.forEach((mk, index) => {
-                    tbody.innerHTML += `
-                        <tr>
-                            <td class="text-center">${index + 1}</td>
-                            <td>${mk.semesterAsli}</td> <td>${mk.kodeMK}</td>
-                            <td class="fw-semibold">${mk.namaMK}</td>
-                        </tr>
-                    `;
+                semesterArray.forEach(sem => {
+                    selectEl.innerHTML += `<option value="${sem}">${sem}</option>`;
+                });
+
+                // Render tampilan awal
+                renderUI(semesterArray[0]);
+
+                // Event listener saat ganti semester
+                selectEl.addEventListener('change', function() {
+                    renderUI(this.value);
                 });
 
             } catch (error) {
-                console.error("Terjadi kesalahan Fetch:", error);
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="4" class="text-center text-danger py-4">
-                            Gagal memuat data. Silakan muat ulang halaman.
-                        </td>
-                    </tr>
-                `;
+                console.error("Kesalahan jaringan:", error);
+                document.getElementById("tableBelumUpload").innerHTML = `<tr><td colspan="4" class="text-center text-danger">Gagal memuat data.</td></tr>`;
             }
+        }
+
+        function renderUI(selectedSemester) {
+            document.getElementById("judulBelumUpload").textContent = selectedSemester;
+            document.getElementById("judulSudahUpload").textContent = selectedSemester;
+
+            let arrBelum = [];
+            let arrSudah = [];
+
+            // Filter MK yang diampu dosen ini untuk tabel dan grafik ke-1
+            const mkSemesterIni = globalData.mkDiampu.filter(mk => mk.semesterAsli === selectedSemester);
+
+            mkSemesterIni.forEach(mk => {
+                const namaClean = String(mk.namaMK).toLowerCase().trim();
+                const semesterClean = String(mk.semesterKonversi).toLowerCase().trim();
+
+                const kelasSelesai = globalData.mkSudahDinilai.filter(
+                    sudah => sudah.namaMK_clean === namaClean && sudah.semester_clean === semesterClean
+                );
+
+                if (kelasSelesai.length > 0) {
+                    mk.kelasText = kelasSelesai.map(k => k.kelas).join(", ");
+                    arrSudah.push(mk);
+                } else {
+                    arrBelum.push(mk);
+                }
+            });
+
+            // Hitung Data untuk Grafik Ke-2 (Departemen / Global)
+            let jmlTotalGlobal = 0;
+            let jmlSudahGlobal = 0;
+            
+            if (globalData.globalStats && globalData.globalStats[selectedSemester]) {
+                jmlTotalGlobal = globalData.globalStats[selectedSemester].total;
+                jmlSudahGlobal = globalData.globalStats[selectedSemester].uploaded;
+            }
+            let jmlBelumGlobal = jmlTotalGlobal - jmlSudahGlobal;
+
+            // Render Grafik
+            updateCharts(arrSudah.length, arrBelum.length, jmlSudahGlobal, jmlBelumGlobal);
+
+            // Render Tabel Belum Upload
+            const tBelum = document.getElementById("tableBelumUpload");
+            tBelum.innerHTML = "";
+            if (arrBelum.length === 0) {
+                tBelum.innerHTML = `<tr><td colspan="4" class="text-center text-success py-3"><strong>Luar Biasa!</strong> Semua mata kuliah Anda telah diupload.</td></tr>`;
+            } else {
+                arrBelum.forEach((mk, i) => {
+                    tBelum.innerHTML += `
+                        <tr>
+                            <td class="text-center">${i + 1}</td>
+                            <td>${mk.semesterAsli}</td>
+                            <td>${mk.kodeMK}</td>
+                            <td class="fw-semibold">${mk.namaMK}</td>
+                        </tr>`;
+                });
+            }
+
+            // Render Tabel Sudah Upload
+            const tSudah = document.getElementById("tableSudahUpload");
+            tSudah.innerHTML = "";
+            if (arrSudah.length === 0) {
+                tSudah.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-3">Belum ada data portofolio yang Anda selesaikan di semester ini.</td></tr>`;
+            } else {
+                arrSudah.forEach((mk, i) => {
+                    tSudah.innerHTML += `
+                        <tr>
+                            <td class="text-center">${i + 1}</td>
+                            <td>${mk.semesterAsli}</td>
+                            <td>${mk.kodeMK}</td>
+                            <td class="fw-semibold">${mk.namaMK}</td>
+                            <td class="text-center"><span class="badge bg-success">Kelas: ${mk.kelasText}</span></td>
+                        </tr>`;
+                });
+            }
+        }
+
+        function updateCharts(sudahPersonal, belumPersonal, sudahGlobal, belumGlobal) {
+            // --- 1. Update Grafik Pribadi ---
+            const totalPersonal = sudahPersonal + belumPersonal;
+            let pctPersonal = totalPersonal > 0 ? Math.round((sudahPersonal / totalPersonal) * 100) : 0;
+            document.getElementById("chartPersonalText").innerText = `${pctPersonal}%`;
+
+            const ctxP = document.getElementById('chartPersonal').getContext('2d');
+            if (myChartPersonal) myChartPersonal.destroy();
+            myChartPersonal = new Chart(ctxP, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Sudah Upload', 'Belum Upload'],
+                    datasets: [{
+                        data: [sudahPersonal, belumPersonal],
+                        backgroundColor: ['#198754', '#e9ecef'], // Hijau & Abu-abu terang
+                        borderWidth: 0,
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, cutout: '75%',
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } }
+                }
+            });
+
+            // --- 2. Update Grafik Departemen (Global) ---
+            const totalGlobal = sudahGlobal + belumGlobal;
+            let pctGlobal = totalGlobal > 0 ? Math.round((sudahGlobal / totalGlobal) * 100) : 0;
+            document.getElementById("chartGlobalText").innerText = `${pctGlobal}%`;
+
+            const ctxG = document.getElementById('chartGlobal').getContext('2d');
+            if (myChartGlobal) myChartGlobal.destroy();
+            myChartGlobal = new Chart(ctxG, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Total Uploaded', 'Sisa MK Departemen'],
+                    datasets: [{
+                        data: [sudahGlobal, belumGlobal],
+                        backgroundColor: ['#0d6efd', '#e9ecef'], // Biru & Abu-abu terang
+                        borderWidth: 0,
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, cutout: '75%',
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } }
+                }
+            });
         }
 
     </script>    
