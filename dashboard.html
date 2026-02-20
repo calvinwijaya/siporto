@@ -129,14 +129,34 @@
                 <br><br><strong>Silakan pilih menu di sebelah kiri untuk membuat portofolio!</strong>
             </p>
 
-            <!-- Grafik sekarang ada DI DALAM mainContent -->
-            <!-- <div class="row mt-4">
-                <div class="col-md-6">
-                    <div class="card shadow-sm p-3 mb-4" style="height: 400px;">
-                        <canvas id="portoChart"></canvas>
-                    </div>
+            <!-- tabel disini -->
+            <div class="mt-5">
+                <div class="d-flex align-items-center mb-3">
+                    <h5 class="text-danger fw-bold mb-0">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i> Daftar MK Belum Upload Nilai CPL/PI
+                    </h5>
                 </div>
-            </div> -->
+                <div class="table-responsive shadow-sm rounded">
+                    <table class="table table-bordered table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col" class="text-center" width="5%">No</th>
+                                <th scope="col" width="20%">Semester</th>
+                                <th scope="col" width="20%">Kode MK</th>
+                                <th scope="col">Nama Mata Kuliah</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBelumUpload">
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-4">
+                                    <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                    Memuat data mata kuliah...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -147,12 +167,64 @@
     </div>
 
     <script>
+        
+        const URL_GAS_CHECKER = "https://script.google.com/macros/s/AKfycbzzNG57TTQ41yyu4M_9YwI-V9vxBwqXkhh-rhA082qOpdAFfRqRL0RmYxl-oYY2AKD9Xg/exec"
+
         const user = JSON.parse(sessionStorage.getItem("user"));
         if (!user) {
             window.location.href = 'index.html';
+        } else {
+            document.getElementById("userNama").textContent = user.nama;
+            loadTabelBelumUpload(user.email);
         }
-        document.getElementById("userNama").textContent = user.nama;
+
+        async function loadTabelBelumUpload(emailUser) {
+            const tbody = document.getElementById("tableBelumUpload");
+
+            try {
+                // Hanya 1 kali fetch, sistem GAS yang melakukan sisanya
+                const response = await fetch(`${URL_GAS_CHECKER}?email=${encodeURIComponent(emailUser)}`);
+                const mkBelumUpload = await response.json();
+
+                // Kosongkan tabel loading
+                tbody.innerHTML = "";
+
+                if (mkBelumUpload.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="4" class="text-center text-success py-4">
+                                <strong>Luar Biasa!</strong> Semua mata kuliah Anda telah diupload nilainya.
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                // Render ke tabel
+                mkBelumUpload.forEach((mk, index) => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td class="text-center">${index + 1}</td>
+                            <td>${mk.semesterAsli}</td> <td>${mk.kodeMK}</td>
+                            <td class="fw-semibold">${mk.namaMK}</td>
+                        </tr>
+                    `;
+                });
+
+            } catch (error) {
+                console.error("Terjadi kesalahan Fetch:", error);
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center text-danger py-4">
+                            Gagal memuat data. Silakan muat ulang halaman.
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
     </script>    
+    
     <!-- <script src="grafik.js"></script> -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
