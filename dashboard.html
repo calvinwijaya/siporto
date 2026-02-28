@@ -87,31 +87,49 @@
                 </div>
             </div>
                 
-            <div class="row mb-5">
-                <div class="col-md-6 mb-3 mb-md-0">
+            <div class="row mb-5 align-items-stretch"> <div class="col-md-5 mb-4 mb-md-0">
                     <div class="card shadow-sm border-0 h-100">
-                        <div class="card-body text-center">
-                            <h5 class="fw-bold text-success mb-1">Progres Portofolio Anda</h5>
-                            <p class="text-muted small mb-3">Berdasarkan Mata Kuliah yang Anda ampu</p>
-                            <div style="width: 220px; height: 220px; margin: 0 auto; position: relative;">
+                        <div class="card-body text-center d-flex flex-column justify-content-center py-4">
+                            <h5 class="fw-bold text-success mb-1">Total Progres Portofolio Anda</h5>
+                            <p class="text-muted small mb-4">Berdasarkan Mata Kuliah yang Anda ampu</p>
+                            <div style="width: 250px; height: 250px; margin: 0 auto; position: relative;">
                                 <canvas id="chartPersonal"></canvas>
-                                <div id="chartPersonalText" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; font-weight: bold; font-size: 1.5rem; color: #198754;">
-                                    0%
-                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 
-                <div class="col-md-6">
-                    <div class="card shadow-sm border-0 h-100">
-                        <div class="card-body text-center">
-                            <h5 class="fw-bold text-primary mb-1">Progres Departemen</h5>
-                            <p class="text-muted small mb-3">Berdasarkan Total Seluruh Mata Kuliah</p>
-                            <div style="width: 220px; height: 220px; margin: 0 auto; position: relative;">
-                                <canvas id="chartGlobal"></canvas>
-                                <div id="chartGlobalText" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; font-weight: bold; font-size: 1.5rem; color: #0d6efd;">
-                                    0%
+                <div class="col-md-7">
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <div class="card shadow-sm border-0 bg-light">
+                                <div class="card-body text-center py-3">
+                                    <h6 class="fw-bold text-secondary mb-3">Progres Prodi S1</h6>
+                                    <div style="width: 100%; max-width: 220px; height: 160px; margin: 0 auto; position: relative;">
+                                        <canvas id="chartPersonalS1"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="card shadow-sm border-0 bg-light h-100">
+                                <div class="card-body text-center py-3">
+                                    <h6 class="fw-bold text-secondary mb-3">Progres Prodi S2</h6>
+                                    <div style="width: 100%; height: 150px; margin: 0 auto; position: relative;">
+                                        <canvas id="chartPersonalS2"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="card shadow-sm border-0 bg-light h-100">
+                                <div class="card-body text-center py-3">
+                                    <h6 class="fw-bold text-secondary mb-3">Progres Prodi S3</h6>
+                                    <div style="width: 100%; height: 150px; margin: 0 auto; position: relative;">
+                                        <canvas id="chartPersonalS3"></canvas>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -132,20 +150,29 @@
                 </div>
             </div>
 
-            <div class="mt-4">
-                <h5 class="text-danger fw-bold mb-3"><i class="bi bi-exclamation-triangle-fill me-2"></i> Daftar MK Belum Upload Nilai CPL/PI - <span class="judulSemesterText">Memuat...</span></h5>
-                <div class="table-responsive shadow-sm rounded mb-4">
-                    <table class="table table-bordered table-hover align-middle mb-0"><thead class="table-light"><tr><th width="5%">No</th><th width="20%">Semester</th><th width="20%">Kode MK</th><th>Nama Mata Kuliah</th></tr></thead><tbody id="tableBelumUpload"></tbody></table>
-                </div>
+            <div class="d-flex justify-content-center mb-4 mt-2">
+                <div class="btn-group shadow-sm" role="group" aria-label="Filter Jenjang">
+                    <input type="radio" class="btn-check" name="jenjangFilter" id="tabS1" value="S1" autocomplete="off" checked>
+                    <label class="btn btn-outline-primary px-4 fw-bold" for="tabS1">Jenjang S1</label>
 
-                <h5 class="text-success fw-bold mb-3"><i class="bi bi-check-circle-fill me-2"></i> Daftar MK Sudah Upload Nilai CPL/PI - <span class="judulSemesterText">Memuat...</span></h5>
-                <div class="table-responsive shadow-sm rounded mb-5">
-                    <table class="table table-bordered table-hover align-middle mb-0"><thead class="table-light"><tr><th width="5%">No</th><th width="20%">Semester</th><th width="20%">Kode MK</th><th>Nama Mata Kuliah</th><th width="15%" class="text-center">Kelas Selesai</th></tr></thead><tbody id="tableSudahUpload"></tbody></table>
+                    <input type="radio" class="btn-check" name="jenjangFilter" id="tabS2" value="S2" autocomplete="off">
+                    <label class="btn btn-outline-primary px-4 fw-bold" for="tabS2">Jenjang S2</label>
+
+                    <input type="radio" class="btn-check" name="jenjangFilter" id="tabS3" value="S3" autocomplete="off">
+                    <label class="btn btn-outline-primary px-4 fw-bold" for="tabS3">Jenjang S3</label>
                 </div>
             </div>
 
+            <div class="mt-4">
+                <h5 class="text-danger fw-bold mb-3"><i class="bi bi-exclamation-triangle-fill me-2"></i> Daftar MK Belum Upload Nilai CPL/PI - <span class="judulSemesterText">Memuat...</span></h5>
+                <div class="table-responsive shadow-sm rounded mb-4"><table class="table table-bordered table-hover align-middle mb-0"><thead class="table-light"><tr><th width="5%">No</th><th width="20%">Semester</th><th width="20%">Kode MK</th><th>Nama Mata Kuliah</th></tr></thead><tbody id="tableBelumUpload"></tbody></table></div>
+
+                <h5 class="text-success fw-bold mb-3"><i class="bi bi-check-circle-fill me-2"></i> Daftar MK Sudah Upload Nilai CPL/PI - <span class="judulSemesterText">Memuat...</span></h5>
+                <div class="table-responsive shadow-sm rounded mb-5"><table class="table table-bordered table-hover align-middle mb-0"><thead class="table-light"><tr><th width="5%">No</th><th width="20%">Semester</th><th width="20%">Kode MK</th><th>Nama Mata Kuliah</th><th width="15%" class="text-center">Kelas Selesai</th></tr></thead><tbody id="tableSudahUpload"></tbody></table></div>
+            </div>
+
             <div id="adminSection" style="display: none; border-top: 2px dashed #dee2e6; padding-top: 30px;">
-                <div class="alert alert-info border-0 shadow-sm d-flex align-items-center mb-4">
+                <div class="alert alert-info border-0 shadow-sm d-flex align-items-center mb-5">
                     <i class="bi bi-shield-lock-fill fs-3 me-3 text-info"></i>
                     <div>
                         <h5 class="mb-0 fw-bold">Mode Administrator Aktif</h5>
@@ -153,15 +180,61 @@
                     </div>
                 </div>
 
-                <h5 class="text-danger fw-bold mb-3"><i class="bi bi-exclamation-octagon-fill me-2"></i> Daftar MK KESELURUHAN Belum Upload - <span class="judulSemesterText">Memuat...</span></h5>
-                <div class="table-responsive shadow-sm rounded mb-4">
-                    <table class="table table-bordered table-hover align-middle mb-0"><thead class="table-light"><tr><th width="5%">No</th><th width="15%">Semester</th><th width="15%">Kode MK</th><th>Nama Mata Kuliah</th><th width="20%">Dosen Pengampu</th></tr></thead><tbody id="tableAdminBelum"></tbody></table>
+                <div class="row mb-5 align-items-stretch"> <div class="col-md-5 mb-4 mb-md-0">
+                        <div class="card shadow-sm border-0 h-100">
+                            <div class="card-body text-center d-flex flex-column justify-content-center py-4">
+                                <h5 class="fw-bold text-primary mb-1">Progres Departemen</h5>
+                                <p class="text-muted small mb-4">Berdasarkan Total Seluruh Mata Kuliah</p>
+                                <div style="width: 250px; height: 250px; margin: 0 auto; position: relative;">
+                                    <canvas id="chartGlobal"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-7">
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <div class="card shadow-sm border-0 bg-light">
+                                    <div class="card-body text-center py-3">
+                                        <h6 class="fw-bold text-secondary mb-3">Progres Prodi S1</h6>
+                                        <div style="width: 100%; max-width: 220px; height: 160px; margin: 0 auto; position: relative;">
+                                            <canvas id="chartGlobalS1"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="card shadow-sm border-0 bg-light h-100">
+                                    <div class="card-body text-center py-3">
+                                        <h6 class="fw-bold text-secondary mb-3">Progres Prodi S2</h6>
+                                        <div style="width: 100%; height: 150px; margin: 0 auto; position: relative;">
+                                            <canvas id="chartGlobalS2"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="card shadow-sm border-0 bg-light h-100">
+                                    <div class="card-body text-center py-3">
+                                        <h6 class="fw-bold text-secondary mb-3">Progres Prodi S3</h6>
+                                        <div style="width: 100%; height: 150px; margin: 0 auto; position: relative;">
+                                            <canvas id="chartGlobalS3"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
+                <h5 class="text-danger fw-bold mb-3"><i class="bi bi-exclamation-octagon-fill me-2"></i> Daftar MK KESELURUHAN Belum Upload - <span class="judulSemesterText">Memuat...</span></h5>
+                <div class="table-responsive shadow-sm rounded mb-4"><table class="table table-bordered table-hover align-middle mb-0"><thead class="table-light"><tr><th width="5%">No</th><th width="15%">Semester</th><th width="15%">Kode MK</th><th>Nama Mata Kuliah</th><th width="20%">Dosen Pengampu</th></tr></thead><tbody id="tableAdminBelum"></tbody></table></div>
+
                 <h5 class="text-success fw-bold mb-3"><i class="bi bi-check-all me-2"></i> Daftar MK KESELURUHAN Sudah Upload - <span class="judulSemesterText">Memuat...</span></h5>
-                <div class="table-responsive shadow-sm rounded mb-5">
-                    <table class="table table-bordered table-hover align-middle mb-0"><thead class="table-light"><tr><th width="5%">No</th><th width="15%">Semester</th><th width="15%">Kode MK</th><th>Nama Mata Kuliah</th><th width="15%" class="text-center">Kelas Selesai</th></tr></thead><tbody id="tableAdminSudah"></tbody></table>
-                </div>
+                <div class="table-responsive shadow-sm rounded mb-5"><table class="table table-bordered table-hover align-middle mb-0"><thead class="table-light"><tr><th width="5%">No</th><th width="15%">Semester</th><th width="15%">Kode MK</th><th>Nama Mata Kuliah</th><th width="15%" class="text-center">Kelas Selesai</th></tr></thead><tbody id="tableAdminSudah"></tbody></table></div>
             </div>
         </div>
     </div>

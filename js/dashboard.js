@@ -1,18 +1,47 @@
-const URL_GAS_CHECKER = "https://script.google.com/macros/s/AKfycbzTjilMg9Y3bMLa5K7vxTOokGeop-vIO2CHgy-Qq4a0dZxbduQrAQuOioJEfgEDHwu3dQ/exec"
+const URL_GAS_CHECKER = "https://script.google.com/macros/s/AKfycbzym0Ekk3PTMdvforKNkubVTxflDNDwqNF3jpOMwpFShL9j-tVRBd6FiSdnCDrimyOkcQ/exec"
 const ADMIN_EMAILS = ["calvin.wijaya@mail.ugm.ac.id", "cecep.pratama@ugm.ac.id"];
 
-// Variabel Global
-let globalData = null;
-let myChartPersonal = null; 
-let myChartGlobal = null;
-let activeSemester = "";
+Chart.register({
+    id: 'centerTextPlugin',
+    beforeDraw: function(chart) {
+        if (chart.config.options.elements && chart.config.options.elements.center) {
+            const ctx = chart.ctx;
+            const chartArea = chart.chartArea;
+            if (!chartArea) return;
+            
+            const centerConfig = chart.config.options.elements.center;
+            ctx.save();
+            ctx.font = centerConfig.font || 'bold 24px sans-serif';
+            ctx.fillStyle = centerConfig.color || '#000';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Kalkulasi titik tengah yang selalu presisi terhadap donat
+            const centerX = (chartArea.left + chartArea.right) / 2;
+            const centerY = (chartArea.top + chartArea.bottom) / 2;
+            
+            ctx.fillText(centerConfig.text, centerX, centerY);
+            ctx.restore();
+        }
+    }
+});
 
-// Variabel State untuk Search dan Sort
+// Variabel Global & Chart Instances
+let globalData = null;
+let activeSemester = "";
+let activeJenjang = "S1"; 
+let searchKeyword = "";
+let isSortAscending = true;
+
+// 8 Instance Chart
+let myChartPersonal = null; 
+let myChartPersonalS1 = null, myChartPersonalS2 = null, myChartPersonalS3 = null;
+let myChartGlobal = null;
+let myChartGlobalS1 = null, myChartGlobalS2 = null, myChartGlobalS3 = null;
+
 let currentDataState = {
     personalBelum: [], personalSudah: [], adminBelum: [], adminSudah: []
 };
-let isSortAscending = true;
-let searchKeyword = "";
 
 const user = JSON.parse(sessionStorage.getItem("user"));
 if (!user) {
@@ -25,22 +54,28 @@ if (!user) {
     initDashboard(user.email);
 }
 
-// Event Listeners untuk Toolbar
+// --- EVENT LISTENERS ---
 document.getElementById('searchInput').addEventListener('keyup', (e) => {
     searchKeyword = e.target.value.toLowerCase().trim();
     renderTables(); 
 });
 
 document.getElementById('btnSort').addEventListener('click', () => {
-    isSortAscending = !isSortAscending; // Balik arah sort
-    const icon = document.querySelector('#btnSort i');
-    icon.className = isSortAscending ? 'bi bi-sort-alpha-down' : 'bi bi-sort-alpha-up';
+    isSortAscending = !isSortAscending; 
+    document.querySelector('#btnSort i').className = isSortAscending ? 'bi bi-sort-alpha-down' : 'bi bi-sort-alpha-up';
     renderTables();
 });
 
 document.getElementById('btnRefresh').addEventListener('click', () => {
     document.getElementById('loadingOverlay').style.display = "flex";
-    initDashboard(user.email); // Tarik data ulang
+    initDashboard(user.email); 
+});
+
+document.querySelectorAll('input[name="jenjangFilter"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+        activeJenjang = e.target.value;
+        renderTables(); 
+    });
 });
 
 async function initDashboard(emailUser) {
@@ -60,7 +95,6 @@ async function initDashboard(emailUser) {
 
         semesterArray.forEach(sem => selectEl.innerHTML += `<option value="${sem}">${sem}</option>`);
 
-        // Hapus listener lama jika ada agar tidak dobel saat refresh
         const newSelectEl = selectEl.cloneNode(true);
         selectEl.parentNode.replaceChild(newSelectEl, selectEl);
         newSelectEl.addEventListener('change', function() {
@@ -82,166 +116,170 @@ function processDataForSemester(selectedSemester) {
     document.querySelectorAll(".judulSemesterText").forEach(el => el.textContent = selectedSemester);
 
     currentDataState = { personalBelum: [], personalSudah: [], adminBelum: [], adminSudah: [] };
+    
+    // Objek rekap statistik per jenjang
+    let statPersonal = { S1: { sudah: 0, belum: 0 }, S2: { sudah: 0, belum: 0 }, S3: { sudah: 0, belum: 0 } };
+    let statGlobal = { S1: { sudah: 0, belum: 0 }, S2: { sudah: 0, belum: 0 }, S3: { sudah: 0, belum: 0 } };
 
-    // --- 1. PROSES DATA PERSONAL ---
+    // 1. PROSES DATA PERSONAL
     const mkSemesterIni = globalData.mkDiampu.filter(mk => mk.semesterAsli === selectedSemester);
     mkSemesterIni.forEach(mk => {
         const nC = String(mk.namaMK).toLowerCase().trim();
         const sC = String(mk.semesterKonversi).toLowerCase().trim();
-        const kelasSelesai = globalData.mkSudahDinilai.filter(s => s.namaMK_clean === nC && s.semester_clean === sC);
-
-        // LOGIKA BARU: Cek apakah ada minimal 1 kelas yang BUKAN IUP
+        
+        const kelasSelesai = globalData.mkSudahDinilai.filter(s => s.namaMK_clean === nC && s.semester_clean === sC && s.jenjang === mk.jenjang);
         const adaReguler = kelasSelesai.some(k => String(k.kelas).toUpperCase().trim() !== "IUP");
 
         if (adaReguler) {
-            // Jika ada kelas reguler (A, B, dll), masuk daftar Sudah Upload
             mk.kelasText = kelasSelesai.map(k => k.kelas).join(", ");
             currentDataState.personalSudah.push(mk);
+            if(statPersonal[mk.jenjang]) statPersonal[mk.jenjang].sudah++;
         } else {
-            // Jika kosong, atau HANYA ada kelas IUP, tetap masuk daftar Belum Upload
             currentDataState.personalBelum.push(mk);
+            if(statPersonal[mk.jenjang]) statPersonal[mk.jenjang].belum++;
         }
     });
 
-    // --- 2. PROSES DATA ADMIN (GLOBAL) ---
-    // Kita proses untuk SEMUA user agar Chart Global tetap bisa dihitung secara akurat
+    // 2. PROSES DATA ADMIN (GLOBAL)
     const globalMKSemesterIni = globalData.globalMKList.filter(mk => mk.semesterAsli === selectedSemester);
     globalMKSemesterIni.forEach(mk => {
         const nC = mk.namaMK_clean;
         const sC = String(mk.semesterKonversi).toLowerCase().trim();
-        const kelasSelesai = globalData.globalSudahDinilaiList.filter(s => s.namaMK_clean === nC && s.semester_clean === sC);
-
-        // LOGIKA BARU: Berlaku juga untuk keseluruhan departemen
+        
+        const kelasSelesai = globalData.globalSudahDinilaiList.filter(s => s.namaMK_clean === nC && s.semester_clean === sC && s.jenjang === mk.jenjang);
         const adaReguler = kelasSelesai.some(k => String(k.kelas).toUpperCase().trim() !== "IUP");
 
         if (adaReguler) {
             mk.kelasText = kelasSelesai.map(k => k.kelas).join(", ");
             currentDataState.adminSudah.push(mk);
+            if(statGlobal[mk.jenjang]) statGlobal[mk.jenjang].sudah++;
         } else {
             currentDataState.adminBelum.push(mk);
+            if(statGlobal[mk.jenjang]) statGlobal[mk.jenjang].belum++;
         }
     });
 
-    // --- 3. RENDER CHART ---
-    // Override perhitungan GAS: Hitung manual dari array Admin agar sinkron dengan aturan IUP
+    // 3. RENDER CHARTS
     let jmlSudahGlobal = currentDataState.adminSudah.length;
     let jmlBelumGlobal = currentDataState.adminBelum.length;
     
-    updateCharts(currentDataState.personalSudah.length, currentDataState.personalBelum.length, jmlSudahGlobal, jmlBelumGlobal);
+    updateCharts(
+        currentDataState.personalSudah.length, currentDataState.personalBelum.length, 
+        jmlSudahGlobal, jmlBelumGlobal, 
+        statPersonal, statGlobal
+    );
 
-    // --- 4. RENDER TABEL (Dengan Search & Sort) ---
+    // 4. RENDER TABELS
     renderTables();
 }
 
-// Fungsi Khusus Men-generate Tabel HTML berdasarkan state Search & Sort
-// Fungsi Khusus Men-generate Tabel HTML berdasarkan state Search & Sort
 function renderTables() {
-    const applyFilterAndSort = (arr) => {
-        let res = arr.filter(mk => String(mk.namaMK).toLowerCase().includes(searchKeyword));
-        res.sort((a, b) => {
+    const applyFilterSort = (arr) => {
+        let filtered = arr.filter(mk => 
+            mk.jenjang === activeJenjang && 
+            String(mk.namaMK).toLowerCase().includes(searchKeyword)
+        );
+        filtered.sort((a, b) => {
             let nameA = String(a.namaMK).toLowerCase();
             let nameB = String(b.namaMK).toLowerCase();
             if (nameA < nameB) return isSortAscending ? -1 : 1;
             if (nameA > nameB) return isSortAscending ? 1 : -1;
             return 0;
         });
-        return res;
+        return filtered;
     };
 
-    // --- Render Personal Belum ---
-    const pBelum = applyFilterAndSort(currentDataState.personalBelum);
-    const tbodyPBelum = document.getElementById("tableBelumUpload");
-    if (pBelum.length === 0) {
-        tbodyPBelum.innerHTML = searchKeyword 
-            ? `<tr><td colspan="4" class="text-center text-muted py-3">Pencarian tidak ditemukan.</td></tr>` 
-            : `<tr><td colspan="4" class="text-center text-success py-3"><strong>Luar Biasa!</strong> Semua mata kuliah Anda telah diupload.</td></tr>`;
-    } else {
-        tbodyPBelum.innerHTML = pBelum.map((mk, i) => `<tr><td class="text-center">${i + 1}</td><td>${mk.semesterAsli}</td><td>${mk.kodeMK}</td><td class="fw-semibold">${mk.namaMK}</td></tr>`).join("");
-    }
+    // Render Personal
+    const pBelum = applyFilterSort(currentDataState.personalBelum);
+    const tbPBelum = document.getElementById("tableBelumUpload");
+    tbPBelum.innerHTML = pBelum.length === 0 ? 
+        (searchKeyword ? `<tr><td colspan="4" class="text-center text-muted py-3">Pencarian tidak ditemukan di ${activeJenjang}.</td></tr>` : `<tr><td colspan="4" class="text-center text-success py-3"><strong>Luar Biasa!</strong> Semua mata kuliah ${activeJenjang} Anda telah diupload.</td></tr>`) 
+        : pBelum.map((mk, i) => `<tr><td class="text-center">${i + 1}</td><td>${mk.semesterAsli}</td><td>${mk.kodeMK}</td><td class="fw-semibold">${mk.namaMK}</td></tr>`).join("");
 
-    // --- Render Personal Sudah ---
-    const pSudah = applyFilterAndSort(currentDataState.personalSudah);
-    const tbodyPSudah = document.getElementById("tableSudahUpload");
-    if (pSudah.length === 0) {
-        tbodyPSudah.innerHTML = searchKeyword 
-            ? `<tr><td colspan="5" class="text-center text-muted py-3">Pencarian tidak ditemukan.</td></tr>` 
-            : `<tr><td colspan="5" class="text-center text-muted py-3">Belum ada data portofolio yang Anda selesaikan di semester ini.</td></tr>`;
-    } else {
-        tbodyPSudah.innerHTML = pSudah.map((mk, i) => `<tr><td class="text-center">${i + 1}</td><td>${mk.semesterAsli}</td><td>${mk.kodeMK}</td><td class="fw-semibold">${mk.namaMK}</td><td class="text-center"><span class="badge bg-success">Kelas: ${mk.kelasText}</span></td></tr>`).join("");
-    }
+    const pSudah = applyFilterSort(currentDataState.personalSudah);
+    const tbPSudah = document.getElementById("tableSudahUpload");
+    tbPSudah.innerHTML = pSudah.length === 0 ? 
+        (searchKeyword ? `<tr><td colspan="5" class="text-center text-muted py-3">Pencarian tidak ditemukan di ${activeJenjang}.</td></tr>` : `<tr><td colspan="5" class="text-center text-muted py-3">Belum ada portofolio ${activeJenjang} yang Anda selesaikan di semester ini.</td></tr>`) 
+        : pSudah.map((mk, i) => `<tr><td class="text-center">${i + 1}</td><td>${mk.semesterAsli}</td><td>${mk.kodeMK}</td><td class="fw-semibold">${mk.namaMK}</td><td class="text-center"><span class="badge bg-success">Kelas: ${mk.kelasText}</span></td></tr>`).join("");
 
-    // --- Render Admin (Jika punya akses) ---
+    // Render Admin
     if (ADMIN_EMAILS.includes(user.email)) {
-        // Admin Belum
-        const aBelum = applyFilterAndSort(currentDataState.adminBelum);
-        const tbodyABelum = document.getElementById("tableAdminBelum");
-        if (aBelum.length === 0) {
-            tbodyABelum.innerHTML = searchKeyword 
-                ? `<tr><td colspan="5" class="text-center text-muted py-3">Pencarian tidak ditemukan.</td></tr>` 
-                : `<tr><td colspan="5" class="text-center text-success py-3"><strong>Luar Biasa!</strong> Semua mata kuliah departemen telah diupload.</td></tr>`;
-        } else {
-            tbodyABelum.innerHTML = aBelum.map((mk, i) => `<tr><td class="text-center">${i + 1}</td><td>${mk.semesterAsli}</td><td>${mk.kodeMK}</td><td class="fw-semibold">${mk.namaMK}</td><td>${mk.dosenPengampu}</td></tr>`).join("");
-        }
+        const aBelum = applyFilterSort(currentDataState.adminBelum);
+        const tbABelum = document.getElementById("tableAdminBelum");
+        tbABelum.innerHTML = aBelum.length === 0 ? 
+            (searchKeyword ? `<tr><td colspan="5" class="text-center text-muted py-3">Pencarian tidak ditemukan di ${activeJenjang}.</td></tr>` : `<tr><td colspan="5" class="text-center text-success py-3"><strong>Luar Biasa!</strong> Semua mata kuliah ${activeJenjang} departemen telah diupload.</td></tr>`) 
+            : aBelum.map((mk, i) => `<tr><td class="text-center">${i + 1}</td><td>${mk.semesterAsli}</td><td>${mk.kodeMK}</td><td class="fw-semibold">${mk.namaMK}</td><td>${mk.dosenPengampu}</td></tr>`).join("");
 
-        // Admin Sudah
-        const aSudah = applyFilterAndSort(currentDataState.adminSudah);
-        const tbodyASudah = document.getElementById("tableAdminSudah");
-        if (aSudah.length === 0) {
-            tbodyASudah.innerHTML = searchKeyword 
-                ? `<tr><td colspan="5" class="text-center text-muted py-3">Pencarian tidak ditemukan.</td></tr>` 
-                : `<tr><td colspan="5" class="text-center text-muted py-3">Belum ada data portofolio departemen yang diselesaikan di semester ini.</td></tr>`;
-        } else {
-            tbodyASudah.innerHTML = aSudah.map((mk, i) => `<tr><td class="text-center">${i + 1}</td><td>${mk.semesterAsli}</td><td>${mk.kodeMK}</td><td class="fw-semibold">${mk.namaMK}</td><td class="text-center"><span class="badge bg-success">Kelas: ${mk.kelasText}</span></td></tr>`).join("");
-        }
+        const aSudah = applyFilterSort(currentDataState.adminSudah);
+        const tbASudah = document.getElementById("tableAdminSudah");
+        tbASudah.innerHTML = aSudah.length === 0 ? 
+            (searchKeyword ? `<tr><td colspan="5" class="text-center text-muted py-3">Pencarian tidak ditemukan di ${activeJenjang}.</td></tr>` : `<tr><td colspan="5" class="text-center text-muted py-3">Belum ada portofolio ${activeJenjang} departemen yang selesai di semester ini.</td></tr>`) 
+            : aSudah.map((mk, i) => `<tr><td class="text-center">${i + 1}</td><td>${mk.semesterAsli}</td><td>${mk.kodeMK}</td><td class="fw-semibold">${mk.namaMK}</td><td class="text-center"><span class="badge bg-success">Kelas: ${mk.kelasText}</span></td></tr>`).join("");
     }
 }
 
-function updateCharts(sudahPersonal, belumPersonal, sudahGlobal, belumGlobal) {
-    // --- 1. Update Grafik Pribadi ---
-    const totalPersonal = sudahPersonal + belumPersonal;
-    let pctPersonal = totalPersonal > 0 ? Math.round((sudahPersonal / totalPersonal) * 100) : 0;
-    document.getElementById("chartPersonalText").innerText = `${pctPersonal}%`;
-
-    const ctxP = document.getElementById('chartPersonal').getContext('2d');
+function updateCharts(sudahPersonal, belumPersonal, sudahGlobal, belumGlobal, statPersonal, statGlobal) {
+    // 1. Chart Personal Utama
+    const tP = sudahPersonal + belumPersonal;
+    const pctP = tP > 0 ? `${Math.round((sudahPersonal / tP) * 100)}%` : "0%";
+    
     if (myChartPersonal) myChartPersonal.destroy();
-    myChartPersonal = new Chart(ctxP, {
-        type: 'doughnut',
-        data: {
-            labels: ['Sudah Upload', 'Belum Upload'],
-            datasets: [{
-                data: [sudahPersonal, belumPersonal],
-                backgroundColor: ['#198754', '#e9ecef'], // Hijau & Abu-abu terang
-                borderWidth: 0,
-            }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false, cutout: '75%',
-            plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } }
+    myChartPersonal = new Chart(document.getElementById('chartPersonal'), {
+        type: 'doughnut', 
+        data: { labels: ['Sudah Upload', 'Belum Upload'], datasets: [{ data: [sudahPersonal, belumPersonal], backgroundColor: ['#198754', '#e9ecef'], borderWidth: 0 }] },
+        options: { 
+            responsive: true, maintainAspectRatio: false, cutout: '75%', 
+            plugins: { legend: { position: 'bottom', labels: {boxWidth: 12} } },
+            // Memanggil Plugin Teks
+            elements: { center: { text: pctP, color: '#198754', font: 'bold 28px sans-serif' } }
         }
     });
 
-    // --- 2. Update Grafik Departemen (Global) ---
-    const totalGlobal = sudahGlobal + belumGlobal;
-    let pctGlobal = totalGlobal > 0 ? Math.round((sudahGlobal / totalGlobal) * 100) : 0;
-    document.getElementById("chartGlobalText").innerText = `${pctGlobal}%`;
+    // HELPER: Mini Chart (Dengan Legenda & Teks Tengah)
+    const createMiniChart = (id, inst, s, b, color, labelS = 'Sudah Upload', labelB = 'Belum Upload') => {
+        const t = s + b;
+        const pct = t > 0 ? `${Math.round((s / t) * 100)}%` : "0%";
+        
+        if (inst) inst.destroy();
+        return new Chart(document.getElementById(id), {
+            type: 'doughnut', 
+            data: { labels: [labelS, labelB], datasets: [{ data: [s, b], backgroundColor: [color, '#e9ecef'], borderWidth: 0 }] },
+            options: { 
+                responsive: true, maintainAspectRatio: false, cutout: '70%', 
+                plugins: { legend: { position: 'right', labels: {boxWidth: 10, font: {size: 11}} } },
+                // Memanggil Plugin Teks
+                elements: { center: { text: pct, color: color, font: 'bold 16px sans-serif' } }
+            }
+        });
+    };
 
-    const ctxG = document.getElementById('chartGlobal').getContext('2d');
-    if (myChartGlobal) myChartGlobal.destroy();
-    myChartGlobal = new Chart(ctxG, {
-        type: 'doughnut',
-        data: {
-            labels: ['Total Uploaded', 'Sisa MK Departemen'],
-            datasets: [{
-                data: [sudahGlobal, belumGlobal],
-                backgroundColor: ['#0d6efd', '#e9ecef'], // Biru & Abu-abu terang
-                borderWidth: 0,
-            }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false, cutout: '75%',
-            plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } }
-        }
-    });
+    // 2. Mini Charts Personal
+    myChartPersonalS1 = createMiniChart('chartPersonalS1', myChartPersonalS1, statPersonal.S1.sudah, statPersonal.S1.belum, '#6f42c1');
+    myChartPersonalS2 = createMiniChart('chartPersonalS2', myChartPersonalS2, statPersonal.S2.sudah, statPersonal.S2.belum, '#fd7e14');
+    myChartPersonalS3 = createMiniChart('chartPersonalS3', myChartPersonalS3, statPersonal.S3.sudah, statPersonal.S3.belum, '#20c997');
+
+    // 3. Chart Global Utama (Khusus Admin)
+    if (document.getElementById('chartGlobal')) {
+        const tG = sudahGlobal + belumGlobal;
+        const pctG = tG > 0 ? `${Math.round((sudahGlobal / tG) * 100)}%` : "0%";
+        
+        if (myChartGlobal) myChartGlobal.destroy();
+        myChartGlobal = new Chart(document.getElementById('chartGlobal'), {
+            type: 'doughnut', 
+            data: { labels: ['Total Uploaded', 'Sisa MK Departemen'], datasets: [{ data: [sudahGlobal, belumGlobal], backgroundColor: ['#0d6efd', '#e9ecef'], borderWidth: 0 }] },
+            options: { 
+                responsive: true, maintainAspectRatio: false, cutout: '75%', 
+                plugins: { legend: { position: 'bottom', labels: {boxWidth: 12} } },
+                // Memanggil Plugin Teks
+                elements: { center: { text: pctG, color: '#0d6efd', font: 'bold 28px sans-serif' } }
+            }
+        });
+
+        // 4. Mini Charts Global
+        myChartGlobalS1 = createMiniChart('chartGlobalS1', myChartGlobalS1, statGlobal.S1.sudah, statGlobal.S1.belum, '#6f42c1');
+        myChartGlobalS2 = createMiniChart('chartGlobalS2', myChartGlobalS2, statGlobal.S2.sudah, statGlobal.S2.belum, '#fd7e14');
+        myChartGlobalS3 = createMiniChart('chartGlobalS3', myChartGlobalS3, statGlobal.S3.sudah, statGlobal.S3.belum, '#20c997');
+    }
 }
 
 document.getElementById('toggleSidebar').addEventListener('click', function () {
