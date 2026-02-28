@@ -55,21 +55,30 @@ if (!user) {
 }
 
 // --- EVENT LISTENERS ---
-document.getElementById('searchInput').addEventListener('keyup', (e) => {
-    searchKeyword = e.target.value.toLowerCase().trim();
-    renderTables(); 
-});
+const elSearch = document.getElementById('searchInput');
+if (elSearch) {
+    elSearch.addEventListener('keyup', (e) => {
+        searchKeyword = e.target.value.toLowerCase().trim();
+        renderTables(); 
+    });
+}
 
-document.getElementById('btnSort').addEventListener('click', () => {
-    isSortAscending = !isSortAscending; 
-    document.querySelector('#btnSort i').className = isSortAscending ? 'bi bi-sort-alpha-down' : 'bi bi-sort-alpha-up';
-    renderTables();
-});
+const elBtnSort = document.getElementById('btnSort');
+if (elBtnSort) {
+    elBtnSort.addEventListener('click', () => {
+        isSortAscending = !isSortAscending; 
+        document.querySelector('#btnSort i').className = isSortAscending ? 'bi bi-sort-alpha-down' : 'bi bi-sort-alpha-up';
+        renderTables();
+    });
+}
 
-document.getElementById('btnRefresh').addEventListener('click', () => {
-    document.getElementById('loadingOverlay').style.display = "flex";
-    initDashboard(user.email); 
-});
+const elBtnRefresh = document.getElementById('btnRefresh');
+if (elBtnRefresh) {
+    elBtnRefresh.addEventListener('click', () => {
+        document.getElementById('loadingOverlay').style.display = "flex";
+        initDashboard(user.email); 
+    });
+}
 
 document.querySelectorAll('input[name="jenjangFilter"]').forEach(radio => {
     radio.addEventListener('change', (e) => {
@@ -82,10 +91,18 @@ async function initDashboard(emailUser) {
     try {
         const response = await fetch(`${URL_GAS_CHECKER}?email=${encodeURIComponent(emailUser)}`);
         globalData = await response.json(); 
-        document.getElementById('loadingOverlay').style.display = "none";
+        
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        if (loadingOverlay) loadingOverlay.style.display = "none";
+
+        // --- SOLUSI RACE CONDITION ---
+        // Cek apakah elemen dropdown masih ada di halaman.
+        // Jika null (berarti user sudah pindah ke halaman Buat Porto), hentikan eksekusi di sini!
+        const selectEl = document.getElementById("filterSemester");
+        if (!selectEl) return; 
+        // -----------------------------
 
         const semesterArray = Object.keys(globalData.globalStats).sort().reverse(); 
-        const selectEl = document.getElementById("filterSemester");
         selectEl.innerHTML = ""; 
         
         if(semesterArray.length === 0) {
@@ -106,8 +123,14 @@ async function initDashboard(emailUser) {
 
     } catch (error) {
         console.error("Kesalahan jaringan:", error);
-        document.getElementById('loadingOverlay').style.display = "none";
-        Swal.fire("Error", "Gagal memuat data dari server.", "error");
+        
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        if (loadingOverlay) loadingOverlay.style.display = "none";
+        
+        // Hanya munculkan peringatan error JIKA user masih berada di halaman Dashboard
+        if (document.getElementById("filterSemester")) {
+            Swal.fire("Error", "Gagal memuat data dari server.", "error");
+        }
     }
 }
 
