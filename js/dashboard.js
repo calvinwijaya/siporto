@@ -90,35 +90,44 @@ function processDataForSemester(selectedSemester) {
         const sC = String(mk.semesterKonversi).toLowerCase().trim();
         const kelasSelesai = globalData.mkSudahDinilai.filter(s => s.namaMK_clean === nC && s.semester_clean === sC);
 
-        if (kelasSelesai.length > 0) {
+        // LOGIKA BARU: Cek apakah ada minimal 1 kelas yang BUKAN IUP
+        const adaReguler = kelasSelesai.some(k => String(k.kelas).toUpperCase().trim() !== "IUP");
+
+        if (adaReguler) {
+            // Jika ada kelas reguler (A, B, dll), masuk daftar Sudah Upload
             mk.kelasText = kelasSelesai.map(k => k.kelas).join(", ");
             currentDataState.personalSudah.push(mk);
         } else {
+            // Jika kosong, atau HANYA ada kelas IUP, tetap masuk daftar Belum Upload
             currentDataState.personalBelum.push(mk);
         }
     });
 
     // --- 2. PROSES DATA ADMIN (GLOBAL) ---
-    if (ADMIN_EMAILS.includes(user.email)) {
-        const globalMKSemesterIni = globalData.globalMKList.filter(mk => mk.semesterAsli === selectedSemester);
-        globalMKSemesterIni.forEach(mk => {
-            const nC = mk.namaMK_clean;
-            const sC = String(mk.semesterKonversi).toLowerCase().trim();
-            const kelasSelesai = globalData.globalSudahDinilaiList.filter(s => s.namaMK_clean === nC && s.semester_clean === sC);
+    // Kita proses untuk SEMUA user agar Chart Global tetap bisa dihitung secara akurat
+    const globalMKSemesterIni = globalData.globalMKList.filter(mk => mk.semesterAsli === selectedSemester);
+    globalMKSemesterIni.forEach(mk => {
+        const nC = mk.namaMK_clean;
+        const sC = String(mk.semesterKonversi).toLowerCase().trim();
+        const kelasSelesai = globalData.globalSudahDinilaiList.filter(s => s.namaMK_clean === nC && s.semester_clean === sC);
 
-            if (kelasSelesai.length > 0) {
-                mk.kelasText = kelasSelesai.map(k => k.kelas).join(", ");
-                currentDataState.adminSudah.push(mk);
-            } else {
-                currentDataState.adminBelum.push(mk);
-            }
-        });
-    }
+        // LOGIKA BARU: Berlaku juga untuk keseluruhan departemen
+        const adaReguler = kelasSelesai.some(k => String(k.kelas).toUpperCase().trim() !== "IUP");
+
+        if (adaReguler) {
+            mk.kelasText = kelasSelesai.map(k => k.kelas).join(", ");
+            currentDataState.adminSudah.push(mk);
+        } else {
+            currentDataState.adminBelum.push(mk);
+        }
+    });
 
     // --- 3. RENDER CHART ---
-    let jmlTotalGlobal = globalData.globalStats[selectedSemester]?.total || 0;
-    let jmlSudahGlobal = globalData.globalStats[selectedSemester]?.uploaded || 0;
-    updateCharts(currentDataState.personalSudah.length, currentDataState.personalBelum.length, jmlSudahGlobal, jmlTotalGlobal - jmlSudahGlobal);
+    // Override perhitungan GAS: Hitung manual dari array Admin agar sinkron dengan aturan IUP
+    let jmlSudahGlobal = currentDataState.adminSudah.length;
+    let jmlBelumGlobal = currentDataState.adminBelum.length;
+    
+    updateCharts(currentDataState.personalSudah.length, currentDataState.personalBelum.length, jmlSudahGlobal, jmlBelumGlobal);
 
     // --- 4. RENDER TABEL (Dengan Search & Sort) ---
     renderTables();
