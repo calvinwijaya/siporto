@@ -11,64 +11,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body {
-            min-height: 100vh;
-            display: flex;
-        }
-        .sidebar {
-            min-width: 250px;
-            max-width: 350px;
-            background-color: #0d6efd;
-            color: white;
-            transition: all 0.3s;
-        }
-        .sidebar.collapsed {
-            min-width: 70px;
-            max-width: 70px;
-        }
-        .sidebar .nav-link {
-            color: white;
-            white-space: nowrap;
-        }
-        .sidebar .nav-link:hover {
-            background-color: rgba(255,255,255,0.2);
-        }
-        .sidebar .nav-link.active {
-            background-color: rgba(255,255,255,0.3);
-        }
-        .sidebar .nav-link .label {
-            transition: opacity 0.3s;
-        }
-        .sidebar.collapsed .nav-link .label {
-            opacity: 0;
-            pointer-events: none;
-        }
-        .sidebar .toggle-btn {
-            cursor: pointer;
-            padding: 10px;
-            display: flex;
-            justify-content: flex-end;
-            color: white;
-        }
-        .sidebar.collapsed .toggle-btn {
-            justify-content: center;
-        }
-        .content {
-            flex: 1;
-            padding: 20px;
-            background-color: #f8f9fa;
-            transition: margin-left 0.3s;
-        }
-        .nav-link.active {
-            background-color: #0d6efd; /* Warna biru Bootstrap */
-            color: white !important;
-            border-radius: 5px;
-        }
-        .nav-link.active i {
-            color: white !important;
-        }
-    </style>
+    <link rel="stylesheet" href="css/dashboard.css">
 </head>
 <body>
     <div class="sidebar d-flex flex-column p-2" id="sidebar">
@@ -176,53 +119,48 @@
                 </div>
             </div>
 
-            <div class="mt-5">
-                <div class="d-flex align-items-center mb-3">
-                    <h5 class="text-danger fw-bold mb-0">
-                        <i class="bi bi-exclamation-triangle-fill me-2"></i> Daftar MK Belum Upload Nilai CPL/PI - <span id="judulBelumUpload">Memuat...</span>
-                    </h5>
+            <div class="row mb-4 align-items-center bg-white p-3 shadow-sm rounded">
+                <div class="col-md-5 mb-2 mb-md-0">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                        <input type="text" id="searchInput" class="form-control border-start-0" placeholder="Cari Nama Mata Kuliah...">
+                    </div>
                 </div>
-                <div class="table-responsive shadow-sm rounded">
-                    <table class="table table-bordered table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th scope="col" class="text-center" width="5%">No</th>
-                                <th scope="col" width="20%">Semester</th>
-                                <th scope="col" width="20%">Kode MK</th>
-                                <th scope="col">Nama Mata Kuliah</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableBelumUpload">
-                            <tr>
-                                <td colspan="4" class="text-center text-muted py-4">
-                                    <div class="spinner-border spinner-border-sm me-2"></div> Memuat data...
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="col-md-7 d-flex gap-2 justify-content-md-end">
+                    <button id="btnSort" class="btn btn-outline-secondary"><i class="bi bi-sort-alpha-down"></i> Urutkan Nama MK</button>
+                    <button id="btnRefresh" class="btn btn-primary"><i class="bi bi-arrow-clockwise"></i> Refresh Data</button>
                 </div>
             </div>
 
-            <div class="mt-5 mb-5">
-                <div class="d-flex align-items-center mb-3">
-                    <h5 class="text-success fw-bold mb-0">
-                        <i class="bi bi-check-circle-fill me-2"></i> Daftar MK Sudah Upload Nilai CPL/PI - <span id="judulSudahUpload">Memuat...</span>
-                    </h5>
+            <div class="mt-4">
+                <h5 class="text-danger fw-bold mb-3"><i class="bi bi-exclamation-triangle-fill me-2"></i> Daftar MK Belum Upload Nilai CPL/PI - <span class="judulSemesterText">Memuat...</span></h5>
+                <div class="table-responsive shadow-sm rounded mb-4">
+                    <table class="table table-bordered table-hover align-middle mb-0"><thead class="table-light"><tr><th width="5%">No</th><th width="20%">Semester</th><th width="20%">Kode MK</th><th>Nama Mata Kuliah</th></tr></thead><tbody id="tableBelumUpload"></tbody></table>
                 </div>
-                <div class="table-responsive shadow-sm rounded">
-                    <table class="table table-bordered table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th scope="col" class="text-center" width="5%">No</th>
-                                <th scope="col" width="20%">Semester</th>
-                                <th scope="col" width="20%">Kode MK</th>
-                                <th scope="col">Nama Mata Kuliah</th>
-                                <th scope="col" width="15%" class="text-center">Kelas Selesai</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableSudahUpload">
-                            </tbody>
-                    </table>
+
+                <h5 class="text-success fw-bold mb-3"><i class="bi bi-check-circle-fill me-2"></i> Daftar MK Sudah Upload Nilai CPL/PI - <span class="judulSemesterText">Memuat...</span></h5>
+                <div class="table-responsive shadow-sm rounded mb-5">
+                    <table class="table table-bordered table-hover align-middle mb-0"><thead class="table-light"><tr><th width="5%">No</th><th width="20%">Semester</th><th width="20%">Kode MK</th><th>Nama Mata Kuliah</th><th width="15%" class="text-center">Kelas Selesai</th></tr></thead><tbody id="tableSudahUpload"></tbody></table>
+                </div>
+            </div>
+
+            <div id="adminSection" style="display: none; border-top: 2px dashed #dee2e6; padding-top: 30px;">
+                <div class="alert alert-info border-0 shadow-sm d-flex align-items-center mb-4">
+                    <i class="bi bi-shield-lock-fill fs-3 me-3 text-info"></i>
+                    <div>
+                        <h5 class="mb-0 fw-bold">Mode Administrator Aktif</h5>
+                        <small>Anda dapat melihat keseluruhan portofolio departemen.</small>
+                    </div>
+                </div>
+
+                <h5 class="text-danger fw-bold mb-3"><i class="bi bi-exclamation-octagon-fill me-2"></i> Daftar MK KESELURUHAN Belum Upload - <span class="judulSemesterText">Memuat...</span></h5>
+                <div class="table-responsive shadow-sm rounded mb-4">
+                    <table class="table table-bordered table-hover align-middle mb-0"><thead class="table-light"><tr><th width="5%">No</th><th width="15%">Semester</th><th width="15%">Kode MK</th><th>Nama Mata Kuliah</th><th width="20%">Dosen Pengampu</th></tr></thead><tbody id="tableAdminBelum"></tbody></table>
+                </div>
+
+                <h5 class="text-success fw-bold mb-3"><i class="bi bi-check-all me-2"></i> Daftar MK KESELURUHAN Sudah Upload - <span class="judulSemesterText">Memuat...</span></h5>
+                <div class="table-responsive shadow-sm rounded mb-5">
+                    <table class="table table-bordered table-hover align-middle mb-0"><thead class="table-light"><tr><th width="5%">No</th><th width="15%">Semester</th><th width="15%">Kode MK</th><th>Nama Mata Kuliah</th><th width="15%" class="text-center">Kelas Selesai</th></tr></thead><tbody id="tableAdminSudah"></tbody></table>
                 </div>
             </div>
         </div>
@@ -234,341 +172,7 @@
         <p class="small">Mohon tunggu sebentar.</p>
     </div>
 
-    <script>
-        
-        const URL_GAS_CHECKER = "https://script.google.com/macros/s/AKfycbyI51k9LdqnZ9l2UukVqABqU5bABiXzkiwFuWUbA-leexlb2nduC1Ag7UwL3Sq4SMdsYA/exec"
-
-        // Variabel Global
-        let globalData = null;
-        let myChartPersonal = null; 
-        let myChartGlobal = null;
-
-        const user = JSON.parse(sessionStorage.getItem("user"));
-        if (!user) {
-            window.location.href = 'index.html';
-        } else {
-            document.getElementById("userNama").textContent = user.nama;
-            initDashboard(user.email);
-        }
-
-        async function initDashboard(emailUser) {
-            try {
-                const response = await fetch(`${URL_GAS_CHECKER}?email=${encodeURIComponent(emailUser)}`);
-                globalData = await response.json(); 
-
-                // Ambil daftar semester unik dari GAS (Bisa diambil dari kunci objek globalStats)
-                const semesterArray = Object.keys(globalData.globalStats).sort().reverse(); 
-
-                const selectEl = document.getElementById("filterSemester");
-                selectEl.innerHTML = ""; 
-                
-                if(semesterArray.length === 0) {
-                    selectEl.innerHTML = `<option value="">Tidak ada data semester tersedia</option>`;
-                    return;
-                }
-
-                semesterArray.forEach(sem => {
-                    selectEl.innerHTML += `<option value="${sem}">${sem}</option>`;
-                });
-
-                // Render tampilan awal
-                renderUI(semesterArray[0]);
-
-                // Event listener saat ganti semester
-                selectEl.addEventListener('change', function() {
-                    renderUI(this.value);
-                });
-
-            } catch (error) {
-                console.error("Kesalahan jaringan:", error);
-                document.getElementById("tableBelumUpload").innerHTML = `<tr><td colspan="4" class="text-center text-danger">Gagal memuat data.</td></tr>`;
-            }
-        }
-
-        function renderUI(selectedSemester) {
-            document.getElementById("judulBelumUpload").textContent = selectedSemester;
-            document.getElementById("judulSudahUpload").textContent = selectedSemester;
-
-            let arrBelum = [];
-            let arrSudah = [];
-
-            // Filter MK yang diampu dosen ini untuk tabel dan grafik ke-1
-            const mkSemesterIni = globalData.mkDiampu.filter(mk => mk.semesterAsli === selectedSemester);
-
-            mkSemesterIni.forEach(mk => {
-                const namaClean = String(mk.namaMK).toLowerCase().trim();
-                const semesterClean = String(mk.semesterKonversi).toLowerCase().trim();
-
-                const kelasSelesai = globalData.mkSudahDinilai.filter(
-                    sudah => sudah.namaMK_clean === namaClean && sudah.semester_clean === semesterClean
-                );
-
-                if (kelasSelesai.length > 0) {
-                    mk.kelasText = kelasSelesai.map(k => k.kelas).join(", ");
-                    arrSudah.push(mk);
-                } else {
-                    arrBelum.push(mk);
-                }
-            });
-
-            // Hitung Data untuk Grafik Ke-2 (Departemen / Global)
-            let jmlTotalGlobal = 0;
-            let jmlSudahGlobal = 0;
-            
-            if (globalData.globalStats && globalData.globalStats[selectedSemester]) {
-                jmlTotalGlobal = globalData.globalStats[selectedSemester].total;
-                jmlSudahGlobal = globalData.globalStats[selectedSemester].uploaded;
-            }
-            let jmlBelumGlobal = jmlTotalGlobal - jmlSudahGlobal;
-
-            // Render Grafik
-            updateCharts(arrSudah.length, arrBelum.length, jmlSudahGlobal, jmlBelumGlobal);
-
-            // Render Tabel Belum Upload
-            const tBelum = document.getElementById("tableBelumUpload");
-            tBelum.innerHTML = "";
-            if (arrBelum.length === 0) {
-                tBelum.innerHTML = `<tr><td colspan="4" class="text-center text-success py-3"><strong>Luar Biasa!</strong> Semua mata kuliah Anda telah diupload.</td></tr>`;
-            } else {
-                arrBelum.forEach((mk, i) => {
-                    tBelum.innerHTML += `
-                        <tr>
-                            <td class="text-center">${i + 1}</td>
-                            <td>${mk.semesterAsli}</td>
-                            <td>${mk.kodeMK}</td>
-                            <td class="fw-semibold">${mk.namaMK}</td>
-                        </tr>`;
-                });
-            }
-
-            // Render Tabel Sudah Upload
-            const tSudah = document.getElementById("tableSudahUpload");
-            tSudah.innerHTML = "";
-            if (arrSudah.length === 0) {
-                tSudah.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-3">Belum ada data portofolio yang Anda selesaikan di semester ini.</td></tr>`;
-            } else {
-                arrSudah.forEach((mk, i) => {
-                    tSudah.innerHTML += `
-                        <tr>
-                            <td class="text-center">${i + 1}</td>
-                            <td>${mk.semesterAsli}</td>
-                            <td>${mk.kodeMK}</td>
-                            <td class="fw-semibold">${mk.namaMK}</td>
-                            <td class="text-center"><span class="badge bg-success">Kelas: ${mk.kelasText}</span></td>
-                        </tr>`;
-                });
-            }
-        }
-
-        function updateCharts(sudahPersonal, belumPersonal, sudahGlobal, belumGlobal) {
-            // --- 1. Update Grafik Pribadi ---
-            const totalPersonal = sudahPersonal + belumPersonal;
-            let pctPersonal = totalPersonal > 0 ? Math.round((sudahPersonal / totalPersonal) * 100) : 0;
-            document.getElementById("chartPersonalText").innerText = `${pctPersonal}%`;
-
-            const ctxP = document.getElementById('chartPersonal').getContext('2d');
-            if (myChartPersonal) myChartPersonal.destroy();
-            myChartPersonal = new Chart(ctxP, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Sudah Upload', 'Belum Upload'],
-                    datasets: [{
-                        data: [sudahPersonal, belumPersonal],
-                        backgroundColor: ['#198754', '#e9ecef'], // Hijau & Abu-abu terang
-                        borderWidth: 0,
-                    }]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false, cutout: '75%',
-                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } }
-                }
-            });
-
-            // --- 2. Update Grafik Departemen (Global) ---
-            const totalGlobal = sudahGlobal + belumGlobal;
-            let pctGlobal = totalGlobal > 0 ? Math.round((sudahGlobal / totalGlobal) * 100) : 0;
-            document.getElementById("chartGlobalText").innerText = `${pctGlobal}%`;
-
-            const ctxG = document.getElementById('chartGlobal').getContext('2d');
-            if (myChartGlobal) myChartGlobal.destroy();
-            myChartGlobal = new Chart(ctxG, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Total Uploaded', 'Sisa MK Departemen'],
-                    datasets: [{
-                        data: [sudahGlobal, belumGlobal],
-                        backgroundColor: ['#0d6efd', '#e9ecef'], // Biru & Abu-abu terang
-                        borderWidth: 0,
-                    }]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false, cutout: '75%',
-                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } }
-                }
-            });
-        }
-
-    </script>    
-    
-    <!-- <script src="grafik.js"></script> -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        document.getElementById('toggleSidebar').addEventListener('click', function () {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('collapsed');
-
-            // Tutup semua submenu ketika sidebar dicollapse
-            if (sidebar.classList.contains('collapsed')) {
-                document.querySelectorAll('.sidebar .collapse.show').forEach(el => {
-                    const bsCollapse = bootstrap.Collapse.getInstance(el);
-                    if (bsCollapse) {
-                        bsCollapse.hide();
-                    } else {
-                        new bootstrap.Collapse(el, { toggle: false }).hide();
-                    }
-                });
-            }
-        });
-
-        function loadPage(eventOrPage, pagePath, key) {
-            let finalPage, finalKey;
-
-            if (typeof eventOrPage === 'object' && eventOrPage !== null) {
-                if (eventOrPage.preventDefault) eventOrPage.preventDefault();
-                finalPage = pagePath;
-                finalKey = key;
-            } else {
-                finalPage = eventOrPage;
-                finalKey = pagePath;
-            }
-
-            if (!finalPage || !finalKey || finalKey === "undefined") return;
-
-            fetch(finalPage)
-                .then(res => {
-                    if (!res.ok) throw new Error("Gagal mengambil file");
-                    return res.text();
-                })
-                .then(html => {
-                    document.getElementById("mainContent").innerHTML = html;
-
-                    const newUrl = window.location.origin + window.location.pathname + `?page=${finalKey}`;
-                    history.pushState({ page: finalPage, key: finalKey }, "", newUrl);
-
-                    document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'))
-                    const activeLink = document.querySelector(`a[onclick*="'${finalKey}'"]`);
-                    if (activeLink) activeLink.classList.add('active');
-
-                    if (finalKey === 'buatporto') {
-                        loadScript('buatporto/buatPorto.js');
-                    } if (finalKey === 'rekapporto') {
-                        loadScript('rekapporto/rekapPorto.js');
-                    } if (finalKey === 'rekapmahasiswa') {
-                        loadScript('rekapmahasiswa/rekapMahasiswa.js');
-                    } if (finalKey === 'timeseriesProdi') {
-                        loadScript('timeseries/timeSeriesProdi.js');
-                    } if (finalKey === 'timeseriesMK') {
-                        loadScript('timeseries/timeSeriesMK.js');
-                    }
-                })
-                .catch(err => {
-                    console.error(err);
-                    document.getElementById("mainContent").innerHTML = 
-                        "<p class='text-danger'>Gagal memuat halaman.</p>";
-                });
-        }
-
-        function loadScript(src) {
-            const oldScript = document.querySelector(`script[src="${src}"]`);
-            if (oldScript) {
-                oldScript.remove(); // Hapus script lama jika ada
-            }
-            const script = document.createElement('script');
-            script.src = src;
-            script.async = true;
-            document.body.appendChild(script);
-        }
-
-        // Menangani kondisi ketika user menekan tombol 'Back' atau 'Forward' di browser
-        window.onpopstate = function(event) {
-            if (event.state && event.state.page) {
-                loadPage(event.state.page, event.state.key);
-            } else {
-                window.location.href = window.location.pathname; 
-            }
-        };
-
-        document.addEventListener("DOMContentLoaded", () => {
-            const params = new URLSearchParams(window.location.search);
-            const pageKey = params.get("page");
-
-            const routes = {
-                'buatporto': 'buatporto/buatPorto.html',
-                'rekapporto': 'rekapporto/rekapPorto.html',
-                'rekapmahasiswa': 'rekapmahasiswa/rekapMahasiswa.html',
-                'timeseriesProdi': 'timeseries/timeSeriesProdi.html',
-                'timeseriesMK': 'timeseries/timeSeriesMK.html'
-            };
-
-            if (pageKey && routes[pageKey]) {
-                loadPage(routes[pageKey], pageKey);
-            }
-        });
-    </script>
-    <script>
-        document.getElementById("btnLogout").addEventListener("click", (e) => {
-            e.preventDefault();
-
-            Swal.fire({
-                title: 'Keluar dari Sistem?',
-                text: "Anda harus login kembali untuk mengakses data penilaian.",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#dc3545', // Bootstrap Danger color
-                cancelButtonColor: '#6c757d', // Bootstrap Secondary color
-                confirmButtonText: 'Ya, Keluar',
-                cancelButtonText: 'Batal',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    performLogout();
-                }
-            });
-        });
-
-        function performLogout() {
-            try {
-                const userRaw = sessionStorage.getItem("user");
-                const user = userRaw ? JSON.parse(userRaw) : null;
-                const email = user?.email;
-
-                if (window.google?.accounts?.id) {
-                    google.accounts.id.disableAutoSelect();
-                    if (email) {
-                        google.accounts.id.revoke(email, () => {
-                            console.log("Google session revoked");
-                        });
-                    }
-                }
-            } catch (err) {
-                console.warn("Logout cleanup error:", err);
-            }
-
-            sessionStorage.clear();
-            localStorage.clear();
-            
-            // Optional: Show a quick success message before redirecting
-            Swal.fire({
-                title: 'Berhasil Keluar',
-                icon: 'success',
-                timer: 1500,
-                showConfirmButton: false
-            }).then(() => {
-                window.location.href = "index.html";
-            });
-        }
-    </script>
+    <script src="js/dashboard.js"></script>
     <script src="config.js"></script>
 </body>
 </html>
