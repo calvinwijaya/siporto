@@ -32,6 +32,8 @@ let activeSemester = "";
 let activeJenjang = "S1"; 
 let searchKeyword = "";
 let isSortAscending = true;
+let adminSortByDosen = false; 
+let isAdminDosenAsc = true;
 
 // 8 Instance Chart
 let myChartPersonal = null; 
@@ -68,6 +70,26 @@ if (elBtnSort) {
     elBtnSort.addEventListener('click', () => {
         isSortAscending = !isSortAscending; 
         document.querySelector('#btnSort i').className = isSortAscending ? 'bi bi-sort-alpha-down' : 'bi bi-sort-alpha-up';
+        
+        // Reset urutan Dosen Admin jika tombol global ditekan
+        adminSortByDosen = false;
+        const iconDosen = document.getElementById('iconSortDosen');
+        if (iconDosen) iconDosen.className = 'bi bi-arrow-down-up ms-1 text-muted';
+        
+        renderTables();
+    });
+}
+
+const thAdminDosen = document.getElementById('thAdminDosen');
+if (thAdminDosen) {
+    thAdminDosen.addEventListener('click', () => {
+        adminSortByDosen = true; // Aktifkan mode sort Dosen
+        isAdminDosenAsc = !isAdminDosenAsc; // Balik arah A-Z ke Z-A
+        
+        // Ubah Ikon
+        const iconDosen = document.getElementById('iconSortDosen');
+        iconDosen.className = isAdminDosenAsc ? 'bi bi-sort-alpha-down ms-1 text-primary' : 'bi bi-sort-alpha-up ms-1 text-primary';
+        
         renderTables();
     });
 }
@@ -197,29 +219,30 @@ function processDataForSemester(selectedSemester) {
 }
 
 function renderTables() {
-    const applyFilterSort = (arr) => {
+    // Fungsi filter dan sort yang lebih pintar (menerima arah urutan khusus)
+    const applyFilterSort = (arr, sortBy = 'namaMK', isAsc = isSortAscending) => {
         let filtered = arr.filter(mk => 
             mk.jenjang === activeJenjang && 
             String(mk.namaMK).toLowerCase().includes(searchKeyword)
         );
         filtered.sort((a, b) => {
-            let nameA = String(a.namaMK).toLowerCase();
-            let nameB = String(b.namaMK).toLowerCase();
-            if (nameA < nameB) return isSortAscending ? -1 : 1;
-            if (nameA > nameB) return isSortAscending ? 1 : -1;
+            let valA = String(a[sortBy] || "").toLowerCase();
+            let valB = String(b[sortBy] || "").toLowerCase();
+            if (valA < valB) return isAsc ? -1 : 1;
+            if (valA > valB) return isAsc ? 1 : -1;
             return 0;
         });
         return filtered;
     };
 
-    // Render Personal
-    const pBelum = applyFilterSort(currentDataState.personalBelum);
+    // Render Personal (Tetap Nama MK & Global Sort)
+    const pBelum = applyFilterSort(currentDataState.personalBelum, 'namaMK', isSortAscending);
     const tbPBelum = document.getElementById("tableBelumUpload");
     tbPBelum.innerHTML = pBelum.length === 0 ? 
         (searchKeyword ? `<tr><td colspan="4" class="text-center text-muted py-3">Pencarian tidak ditemukan di ${activeJenjang}.</td></tr>` : `<tr><td colspan="4" class="text-center text-success py-3"><strong>Luar Biasa!</strong> Semua mata kuliah ${activeJenjang} Anda telah diupload.</td></tr>`) 
         : pBelum.map((mk, i) => `<tr><td class="text-center">${i + 1}</td><td>${mk.semesterAsli}</td><td>${mk.kodeMK}</td><td class="fw-semibold">${mk.namaMK}</td></tr>`).join("");
 
-    const pSudah = applyFilterSort(currentDataState.personalSudah);
+    const pSudah = applyFilterSort(currentDataState.personalSudah, 'namaMK', isSortAscending);
     const tbPSudah = document.getElementById("tableSudahUpload");
     tbPSudah.innerHTML = pSudah.length === 0 ? 
         (searchKeyword ? `<tr><td colspan="5" class="text-center text-muted py-3">Pencarian tidak ditemukan di ${activeJenjang}.</td></tr>` : `<tr><td colspan="5" class="text-center text-muted py-3">Belum ada portofolio ${activeJenjang} yang Anda selesaikan di semester ini.</td></tr>`) 
@@ -227,13 +250,18 @@ function renderTables() {
 
     // Render Admin
     if (ADMIN_EMAILS.includes(user.email)) {
-        const aBelum = applyFilterSort(currentDataState.adminBelum);
+        // --- ADMIN BELUM UPLOAD: Gunakan logika spesifik klik Dosen Pengampu jika sedang aktif ---
+        const keyBelum = adminSortByDosen ? 'dosenPengampu' : 'namaMK';
+        const ascBelum = adminSortByDosen ? isAdminDosenAsc : isSortAscending;
+        
+        const aBelum = applyFilterSort(currentDataState.adminBelum, keyBelum, ascBelum);
         const tbABelum = document.getElementById("tableAdminBelum");
         tbABelum.innerHTML = aBelum.length === 0 ? 
             (searchKeyword ? `<tr><td colspan="5" class="text-center text-muted py-3">Pencarian tidak ditemukan di ${activeJenjang}.</td></tr>` : `<tr><td colspan="5" class="text-center text-success py-3"><strong>Luar Biasa!</strong> Semua mata kuliah ${activeJenjang} departemen telah diupload.</td></tr>`) 
             : aBelum.map((mk, i) => `<tr><td class="text-center">${i + 1}</td><td>${mk.semesterAsli}</td><td>${mk.kodeMK}</td><td class="fw-semibold">${mk.namaMK}</td><td>${mk.dosenPengampu}</td></tr>`).join("");
 
-        const aSudah = applyFilterSort(currentDataState.adminSudah);
+        // Admin Sudah Upload (Tetap Nama MK & Global Sort)
+        const aSudah = applyFilterSort(currentDataState.adminSudah, 'namaMK', isSortAscending);
         const tbASudah = document.getElementById("tableAdminSudah");
         tbASudah.innerHTML = aSudah.length === 0 ? 
             (searchKeyword ? `<tr><td colspan="5" class="text-center text-muted py-3">Pencarian tidak ditemukan di ${activeJenjang}.</td></tr>` : `<tr><td colspan="5" class="text-center text-muted py-3">Belum ada portofolio ${activeJenjang} departemen yang selesai di semester ini.</td></tr>`) 
