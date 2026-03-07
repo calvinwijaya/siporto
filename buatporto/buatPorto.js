@@ -1321,4 +1321,161 @@ window.generateAndDownloadFullPortfolio = async function() {
         if (overlay) overlay.style.display = "none";
     }
 }
+
+// =============================================================================================================
+// Fungsi Cek Status MK (Sudah diupload atau belum)
+window.cekStatusPorto = async function() {
+    const mkName = document.getElementById('searchMK').value.trim();
+    const kelas = document.getElementById('kelas').value.trim();
+    const tahun = document.getElementById('tahun').value.trim();
+    const overlay = document.getElementById("loadingOverlay");
+
+    // Pastikan user tidak mengetik manual tanpa klik suggestion (kodeMK kosong)
+    let kodeMK = window.selectedKodeMK;
+    if (!kodeMK) {
+        const listData = window.mkList || [];
+        const foundMK = listData.find(item => item.nama.toLowerCase() === mkName.toLowerCase());
+        kodeMK = (foundMK && foundMK.kode) ? foundMK.kode : "";
+    }
+
+    // Validasi input awal
+    if (!selectedJenjang) {
+        return Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Pilih Jenjang terlebih dahulu!', confirmButtonColor: '#0d6efd' });
+    }
+    if (!mkName || !kodeMK) {
+        return Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Cari dan pilih Mata Kuliah yang valid dari daftar terlebih dahulu!', confirmButtonColor: '#0d6efd' });
+    }
+    if (!kelas || !tahun) {
+        return Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Pastikan Kelas dan Tahun-Semester sudah terisi.', confirmButtonColor: '#0d6efd' });
+    }
+
+    // --- MASUKKAN URL SCRIPT GAS CEK STATUS YANG BARU DI SINI ---
+    const URL_GAS_CEK_STATUS = "https://script.google.com/macros/s/AKfycbxKWIpe_8-DvWBRqnhOff1bSC2__q9pz1-IXZkO-eTV7mccscQ0tyOajg41VMzNJ59g/exec";
+
+    if (overlay) overlay.style.display = "flex";
+
+    try {
+        const url = `${URL_GAS_CEK_STATUS}?jenjang=${encodeURIComponent(selectedJenjang)}&kode=${encodeURIComponent(kodeMK)}&kelas=${encodeURIComponent(kelas)}&tahun=${encodeURIComponent(tahun)}`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.error) {
+             throw new Error(data.error);
+        }
+
+        if (data.exists) {
+            Swal.fire({
+                icon: 'error', // Menandakan bahwa data sudah ada (tidak boleh dilanjut)
+                title: 'Portofolio Sudah Ada',
+                html: `Nilai untuk <b>${kodeMK} - ${mkName}</b> (Kelas <b>${kelas}</b>) pada <b>${tahun}</b> sudah tercatat di sistem.<br><br>Mohon untuk tidak mengunggah data ganda.`,
+                confirmButtonColor: '#dc3545'
+            });
+        } else {
+            Swal.fire({
+                icon: 'success', // Menandakan aman untuk dilanjut
+                title: 'Belum Ada Data',
+                html: `Portofolio <b>${kodeMK} - ${mkName}</b> (Kelas <b>${kelas}</b>) untuk <b>${tahun}</b> belum masuk.<br><br>Silakan lanjutkan proses pengisian portofolio.`,
+                confirmButtonColor: '#198754'
+            });
+        }
+
+    } catch (err) {
+        console.error("Gagal mengecek status:", err);
+        Swal.fire({
+            icon: 'warning',
+            title: 'Gagal Memeriksa',
+            text: 'Terjadi kesalahan jaringan saat memeriksa status portofolio. Silakan coba lagi nanti.',
+            confirmButtonColor: '#0d6efd'
+        });
+    } finally {
+        if (overlay) overlay.style.display = "none";
+    }
+}
+
+// =============================================================================================================
+// Fungsi Reset/Kosongkan Seluruh Formulir
+function resetFormPorto() {
+    Swal.fire({
+        title: 'Reset Formulir?',
+        text: "Semua isian, tabel rencana asesmen, nilai CSV, dan grafik akan dikosongkan.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, Bersihkan!',
+        cancelButtonText: 'Batal'
+    }).then(async (result) => { // PERUBAHAN: Tambahkan 'async' di sini
+        if (result.isConfirmed) {
+            // 1. Reset Input Teks & Dropdown
+            document.getElementById('searchMK').value = '';
+            window.selectedKodeMK = ""; 
+            document.getElementById('kelas').selectedIndex = 0;
+            document.getElementById('jumlahCPMK').value = '';
+            document.getElementById('jumlahMahasiswa').value = '';
+            document.getElementById('evaluasi').value = '';
+            document.getElementById('rencana').value = '';
+
+            // 2. Reset Tombol CPL
+            if (typeof selectedCPL !== 'undefined') selectedCPL.clear();
+            document.querySelectorAll("#cplButtons button").forEach(btn => {
+                btn.classList.remove("btn-primary", "text-white");
+                btn.classList.add("btn-outline-dark");
+            });
+
+            // 3. Reset Tabel Rencana Asesmen
+            const tableRows = document.getElementById("assessmentRows");
+            if (tableRows) tableRows.innerHTML = "";
+            if (typeof assessmentCount !== 'undefined') assessmentCount = 0;
+            
+            const warningText = document.getElementById("persentaseWarning");
+            if (warningText) warningText.innerHTML = "";
+
+            // 4. Reset File Input & Status CSV
+            const csvInput = document.getElementById('csvUpload');
+            if (csvInput) csvInput.value = "";
+            const uploadStatus = document.getElementById('uploadStatus');
+            if (uploadStatus) uploadStatus.innerHTML = "";
+
+            // 5. Sembunyikan Area Grafik & Bersihkan Tabel Analisis
+            document.getElementById('sectionCPMK').classList.add('d-none');
+            document.getElementById('sectionCPL').classList.add('d-none');
+            document.getElementById('sectionPI').classList.add('d-none');
+            
+            document.getElementById('cpmkPerformance').innerHTML = "";
+            document.getElementById('cplPerformance').innerHTML = "";
+            document.getElementById('piPerformance').innerHTML = "";
+
+            // Bersihkan Data Global
+            window.cpmkData = null;
+            window.cplData = null;
+            window.piData = null;
+            window.piMap = null;
+
+            // 6. Kembalikan Jenjang ke S1 secara Manual & Tunggu Loading Selesai
+            selectedJenjang = "S1";
+            document.querySelectorAll("#jenjangButtons .btn").forEach(b => {
+                b.classList.remove("btn-primary", "text-white");
+                b.classList.add("btn-outline-primary");
+            });
+            const btnS1 = Array.from(document.querySelectorAll("#jenjangButtons button")).find(b => b.textContent === "S1");
+            if (btnS1) {
+                btnS1.classList.remove("btn-outline-primary");
+                btnS1.classList.add("btn-primary", "text-white");
+            }
+
+            // PERUBAHAN: Sistem akan menunggu loading MK S1 selesai, baru lanjut ke baris bawahnya
+            await loadMKList("S1");
+            generateCPLButtons("S1");
+
+            // 7. Notifikasi Sukses (Hanya muncul SETELAH loading overlay hilang)
+            Swal.fire({
+                title: 'Berhasil!',
+                text: 'Formulir telah dikosongkan dan siap digunakan kembali.',
+                icon: 'success',
+                timer: 1500,
+                showConfirmButton: false
+            });
+        }
+    });
+}
 }
