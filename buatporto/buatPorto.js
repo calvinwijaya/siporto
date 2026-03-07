@@ -43,7 +43,7 @@ function initJenjangButtons() {
 
 // 2. Load Daftar MK
 async function loadMKList(jenjang) {
-    const scriptUrl = "https://script.google.com/macros/s/AKfycbz4NcXFQz3K1_sYV1wXiy_trBgJlIEeBAWnzKVkpa_5PME_N8N8m0x5LjCBQNi701QQCQ/exec";
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbxTqhIwB0mou4EF4G2kl5ZShdL3QYdfmM9b-aouk3poYEybLrZuv7ZfKT2KyIvbNOEw1g/exec";
     const overlay = document.getElementById("loadingOverlay");
 
     try {
@@ -67,12 +67,11 @@ async function loadMKList(jenjang) {
     }
 }
 
-// 3. Filter Search
+// 3. Filter Search & Auto Fill
 function filterMK() {
     const input = document.getElementById('searchMK').value.toLowerCase();
     const suggestionBox = document.getElementById('mkSuggestions');
     
-    // Pastikan menggunakan mkList dari scope yang benar
     const listData = window.mkList || mkList || [];
 
     if (!input || listData.length === 0) {
@@ -81,7 +80,8 @@ function filterMK() {
         return;
     }
 
-    const matched = listData.filter(mk => mk.toLowerCase().includes(input)).slice(0, 10);
+    // Filter berdasarkan properti 'nama' di dalam object
+    const matched = listData.filter(item => item.nama.toLowerCase().includes(input)).slice(0, 10);
 
     if (matched.length === 0) {
         suggestionBox.innerHTML = '';
@@ -90,18 +90,51 @@ function filterMK() {
     }
 
     suggestionBox.innerHTML = '';
-    matched.forEach(mk => {
+    matched.forEach(item => {
         const a = document.createElement('a');
         a.href = "#";
         a.className = "list-group-item list-group-item-action py-2";
         a.style.cursor = "pointer";
-        a.innerHTML = `<i class="bi bi-book me-2"></i>${mk}`;
+        a.innerHTML = `<i class="bi bi-book me-2"></i>${item.nama}`;
+        
         a.onclick = (e) => {
             e.preventDefault();
-            document.getElementById('searchMK').value = mk;
+            
+            // 1. Isi input text Nama MK
+            document.getElementById('searchMK').value = item.nama;
+            
+            // 2. Auto-fill Jumlah CPMK
+            if (item.cpmk) {
+                document.getElementById('jumlahCPMK').value = item.cpmk;
+            }
+
+            // 3. Auto-fill (Klik otomatis) Tombol CPL
+            if (item.cpl) {
+                // Bersihkan semua pilihan CPL sebelumnya terlebih dahulu
+                document.querySelectorAll("#cplButtons button").forEach(btn => {
+                    btn.classList.remove("btn-primary", "text-white");
+                    btn.classList.add("btn-outline-dark");
+                });
+                selectedCPL.clear(); // Hapus Set internal
+
+                // Pecah string "a, b, c" menjadi array ["a", "b", "c"]
+                const targetCPLs = item.cpl.split(',').map(s => s.trim());
+                
+                // Cari tombol yang sesuai dan klik
+                document.querySelectorAll("#cplButtons button").forEach(btn => {
+                    const btnText = btn.textContent.toLowerCase();
+                    if (targetCPLs.includes(btnText)) {
+                        // Simulasikan klik user agar fungsi internal berjalan normal
+                        btn.click(); 
+                    }
+                });
+            }
+
+            // Tutup kotak suggestion
             suggestionBox.innerHTML = '';
             suggestionBox.classList.add('d-none');
         };
+        
         suggestionBox.appendChild(a);
     });
 
