@@ -49,8 +49,9 @@ function filterMK_TS() {
         suggestionBox.classList.add('d-none');
         return;
     }
-
-    const matched = mkListTS.filter(mk => mk.toLowerCase().includes(input)).slice(0, 10);
+    
+    // PERBAIKAN: Gunakan item.nama karena bentuk data sekarang adalah Object
+    const matched = mkListTS.filter(item => item.nama.toLowerCase().includes(input)).slice(0, 10);
 
     if (matched.length === 0) {
         suggestionBox.innerHTML = '';
@@ -59,15 +60,20 @@ function filterMK_TS() {
     }
 
     suggestionBox.innerHTML = '';
-    matched.forEach(mk => {
+    matched.forEach(item => {
         const a = document.createElement('a');
         a.href = "javascript:void(0)";
         a.className = "list-group-item list-group-item-action py-2";
         a.style.cursor = "pointer";
-        a.innerHTML = `<i class="bi bi-book me-2"></i>${mk}`;
+        
+        // PERBAIKAN: Menampilkan Kode MK dan Nama MK agar lebih informatif
+        a.innerHTML = `<i class="bi bi-book me-2"></i>${item.kode} - ${item.nama}`; 
+        
         a.onclick = (e) => {
             e.preventDefault();
-            document.getElementById('pilihMKTS').value = mk;
+            
+            // PERBAIKAN: Mengisi kotak input dengan Nama MK saja agar cocok saat pencarian grafik
+            document.getElementById('pilihMKTS').value = item.nama; 
             suggestionBox.innerHTML = '';
             suggestionBox.classList.add('d-none');
         };
