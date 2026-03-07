@@ -43,7 +43,7 @@ function initJenjangButtons() {
 
 // 2. Load Daftar MK
 async function loadMKList(jenjang) {
-    const scriptUrl = "https://script.google.com/macros/s/AKfycbzJvdvXwbjfStybYQyvMF3HIu6eAx_LDNLvy7dVD_4re83fiOsv-cxS08XqJUMMFpwwKQ/exec";
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbxvM9dL5-RDy6nGSFS4d_ByXLdohXPkXzfCNt1bQ1t3XaMVfebLvVXJQZGYPM3nO9Xs1g/exec";
     const overlay = document.getElementById("loadingOverlay");
 
     try {
@@ -1012,8 +1012,21 @@ function renderPIChart(allPIs, usedData) {
 // Fungsi untuk mengirim data nilai ke GAS
 window.sendToSheet = async function() {
     const mkName = document.getElementById('searchMK').value.trim();
-    // Ambil Kode MK dari variabel yang disimpan saat auto-complete diklik
-    const kodeMK = window.selectedKodeMK || "-"; 
+    
+    // --- PENAMBAHAN JARING PENGAMAN KODE MK ---
+    let kodeMK = window.selectedKodeMK;
+    
+    // Jika kodeMK kosong (karena dosen mengetik manual / tidak klik dropdown)
+    if (!kodeMK) {
+        // Cari otomatis dari data mkList yang sudah di-load di awal
+        const listData = window.mkList || [];
+        const foundMK = listData.find(item => item.nama.toLowerCase() === mkName.toLowerCase());
+        
+        // Jika ketemu namanya, ambil kodenya. Jika tidak, baru beri tanda "-"
+        kodeMK = (foundMK && foundMK.kode) ? foundMK.kode : "-";
+    }
+    // ------------------------------------------
+
     const kelas = document.getElementById('kelas').value.trim();
     const tahun = document.getElementById('tahun').value.trim();
     const fileInput = document.getElementById('csvUpload');
