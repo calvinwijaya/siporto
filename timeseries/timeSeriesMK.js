@@ -16,7 +16,7 @@ async function onJenjangMKChange() {
 
     if (!jenjang) return;
 
-    const scriptUrl = "https://script.google.com/macros/s/AKfycbxTqhIwB0mou4EF4G2kl5ZShdL3QYdfmM9b-aouk3poYEybLrZuv7ZfKT2KyIvbNOEw1g/exec";
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbzJvdvXwbjfStybYQyvMF3HIu6eAx_LDNLvy7dVD_4re83fiOsv-cxS08XqJUMMFpwwKQ/exec";
 
     try {
         if (overlay) overlay.style.display = "flex";

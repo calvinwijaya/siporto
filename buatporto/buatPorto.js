@@ -43,7 +43,7 @@ function initJenjangButtons() {
 
 // 2. Load Daftar MK
 async function loadMKList(jenjang) {
-    const scriptUrl = "https://script.google.com/macros/s/AKfycbxTqhIwB0mou4EF4G2kl5ZShdL3QYdfmM9b-aouk3poYEybLrZuv7ZfKT2KyIvbNOEw1g/exec";
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbzJvdvXwbjfStybYQyvMF3HIu6eAx_LDNLvy7dVD_4re83fiOsv-cxS08XqJUMMFpwwKQ/exec";
     const overlay = document.getElementById("loadingOverlay");
 
     try {
@@ -77,10 +77,11 @@ function filterMK() {
     if (!input || listData.length === 0) {
         suggestionBox.innerHTML = '';
         suggestionBox.classList.add('d-none');
+        // Reset kode jika input kosong
+        window.selectedKodeMK = ""; 
         return;
     }
 
-    // Filter berdasarkan properti 'nama' di dalam object
     const matched = listData.filter(item => item.nama.toLowerCase().includes(input)).slice(0, 10);
 
     if (matched.length === 0) {
@@ -95,13 +96,14 @@ function filterMK() {
         a.href = "#";
         a.className = "list-group-item list-group-item-action py-2";
         a.style.cursor = "pointer";
-        a.innerHTML = `<i class="bi bi-book me-2"></i>${item.nama}`;
+        a.innerHTML = `<i class="bi bi-book me-2"></i>${item.kode} - ${item.nama}`; // Tampilkan kode di list
         
         a.onclick = (e) => {
             e.preventDefault();
             
-            // 1. Isi input text Nama MK
+            // 1. Isi input text Nama MK & Simpan Kode MK
             document.getElementById('searchMK').value = item.nama;
+            window.selectedKodeMK = item.kode; // SIMPAN KODE MK DI SINI
             
             // 2. Auto-fill Jumlah CPMK
             if (item.cpmk) {
@@ -110,27 +112,21 @@ function filterMK() {
 
             // 3. Auto-fill (Klik otomatis) Tombol CPL
             if (item.cpl) {
-                // Bersihkan semua pilihan CPL sebelumnya terlebih dahulu
                 document.querySelectorAll("#cplButtons button").forEach(btn => {
                     btn.classList.remove("btn-primary", "text-white");
                     btn.classList.add("btn-outline-dark");
                 });
-                selectedCPL.clear(); // Hapus Set internal
+                selectedCPL.clear();
 
-                // Pecah string "a, b, c" menjadi array ["a", "b", "c"]
                 const targetCPLs = item.cpl.split(',').map(s => s.trim());
-                
-                // Cari tombol yang sesuai dan klik
                 document.querySelectorAll("#cplButtons button").forEach(btn => {
                     const btnText = btn.textContent.toLowerCase();
                     if (targetCPLs.includes(btnText)) {
-                        // Simulasikan klik user agar fungsi internal berjalan normal
                         btn.click(); 
                     }
                 });
             }
 
-            // Tutup kotak suggestion
             suggestionBox.innerHTML = '';
             suggestionBox.classList.add('d-none');
         };
@@ -1016,6 +1012,8 @@ function renderPIChart(allPIs, usedData) {
 // Fungsi untuk mengirim data nilai ke GAS
 window.sendToSheet = async function() {
     const mkName = document.getElementById('searchMK').value.trim();
+    // Ambil Kode MK dari variabel yang disimpan saat auto-complete diklik
+    const kodeMK = window.selectedKodeMK || "-"; 
     const kelas = document.getElementById('kelas').value.trim();
     const tahun = document.getElementById('tahun').value.trim();
     const fileInput = document.getElementById('csvUpload');
@@ -1024,13 +1022,28 @@ window.sendToSheet = async function() {
 
     // Validasi Awal
     if (!mkName || !kelas) {
-        return Swal.fire('Data Belum Lengkap', 'Pilih Mata Kuliah dan Kelas terlebih dahulu.', 'warning');
+        return Swal.fire({
+            icon: 'warning',
+            title: 'Data Belum Lengkap',
+            text: 'Pilih Mata Kuliah dan Kelas terlebih dahulu.',
+            confirmButtonColor: '#0d6efd'
+        });
     }
     if (!window.piData || !window.piMap) {
-        return Swal.fire('Portofolio Belum Siap', 'Silakan klik "Kalkulasi Portofolio" terlebih dahulu.', 'warning');
+        return Swal.fire({
+            icon: 'warning',
+            title: 'Portofolio Belum Siap',
+            text: 'Silakan klik tombol "3. Kalkulasi Portofolio" terlebih dahulu.',
+            confirmButtonColor: '#0d6efd'
+        });
     }
     if (!file) {
-        return Swal.fire('File CSV Kosong', 'Upload file CSV nilai terlebih dahulu.', 'warning');
+        return Swal.fire({
+            icon: 'warning',
+            title: 'File CSV Kosong',
+            text: 'Upload file CSV nilai terlebih dahulu.',
+            confirmButtonColor: '#0d6efd'
+        });
     }
 
     // Konfirmasi pengiriman
@@ -1049,7 +1062,6 @@ window.sendToSheet = async function() {
 
     try {
         // --- PROSES 1: Kirim Rekap Nilai MK ---
-        // Kita olah data CPL & PI Chart ke dalam satu payload flat
         const cplFlat = {};
         window.cplData.forEach(d => cplFlat[d.cpl] = d.capaian);
         
@@ -1058,6 +1070,7 @@ window.sendToSheet = async function() {
 
         const payloadMK = {
             "jenjang": selectedJenjang,
+            "Kode MK": kodeMK,         
             "Nama Mata Kuliah": mkName,
             "Kelas": kelas,
             "Tahun": tahun,
@@ -1104,6 +1117,7 @@ window.sendToSheet = async function() {
             });
 
             const studentPayload = {
+                "Kode MK": kodeMK,
                 "Nama Mata Kuliah": mkName,
                 "Kelas": kelas,
                 "NIM": nim,
