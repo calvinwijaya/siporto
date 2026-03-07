@@ -1086,7 +1086,7 @@ window.sendToSheet = async function() {
             "Kode MK": kodeMK,         
             "Nama Mata Kuliah": mkName,
             "Kelas": kelas,
-            "Tahun": tahun,
+            "Tahun": `="${tahun}"`,
             ...cplFlat,
             ...piFlat
         };
@@ -1094,7 +1094,7 @@ window.sendToSheet = async function() {
         const fdMK = new FormData();
         fdMK.append("data", JSON.stringify(payloadMK));
 
-        const resMK = await fetch("https://script.google.com/macros/s/AKfycbzd7dvbPnfRh5mLxKZ_gNXG5HzI5vzP6Jo00yEYa8CKSETNcXUPkMYgeUNny1whwJD8xA/exec", {
+        const resMK = await fetch("https://script.google.com/macros/s/AKfycbwRbmJ72gEY8B6-ckywJY4-UgDe1hZnucPm26RzeEdpgU7vyGvTLwbtFmZX8c6SvGe2ZQ/exec", {
             method: "POST",
             body: fdMK
         });
