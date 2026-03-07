@@ -85,8 +85,14 @@ async function loadTimeMKPortfolio() {
   const container = document.getElementById("mkChartContainer");
   container.innerHTML = "";
 
+  // 1. Alert Validasi Input (Diganti Swal Warning)
   if (!jenjang || !mkInput || !tahunAwal || !tahunAkhir || tahunAwal > tahunAkhir) {
-    alert("Mohon lengkapi semua input dengan benar (Jenjang, MK, Tahun).");
+    Swal.fire({
+        icon: 'warning',
+        title: 'Input Tidak Valid',
+        text: 'Mohon lengkapi Jenjang, Nama MK, dan rentang Tahun dengan benar. Pastikan Tahun Awal tidak melebihi Tahun Akhir.',
+        confirmButtonColor: '#0d6efd'
+    });
     return;
   }
 
@@ -131,8 +137,14 @@ async function loadTimeMKPortfolio() {
       }
     });
 
+    // 2. Alert Data Kosong (Diganti Swal Info)
     if (datasets.length === 0) {
-      alert("Data tidak ditemukan untuk kombinasi tersebut.");
+      Swal.fire({
+          icon: 'info',
+          title: 'Data Tidak Ditemukan',
+          text: `Tidak ada rekaman portofolio untuk Mata Kuliah "${mkInput}" pada rentang tahun tersebut.`,
+          confirmButtonColor: '#0d6efd'
+      });
       return;
     }
 
@@ -140,7 +152,13 @@ async function loadTimeMKPortfolio() {
 
   } catch (err) {
     console.error("Gagal memuat data MK Time Series:", err);
-    alert("Terjadi kesalahan saat memuat data.");
+    // 3. Alert Catch Error (Diganti Swal Error)
+    Swal.fire({
+        icon: 'error',
+        title: 'Gagal Memuat Data',
+        text: 'Terjadi kesalahan saat mengambil data dari server. Silakan coba beberapa saat lagi.',
+        confirmButtonColor: '#dc3545'
+    });
   } finally {
     document.getElementById("loadingOverlay").style.display = "none";
   }

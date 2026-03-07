@@ -184,7 +184,13 @@ initJenjangButtons();
 function addAssessmentRow() {
     const jumlahCPMK = parseInt(document.getElementById("jumlahCPMK").value);
     if (!jumlahCPMK || jumlahCPMK < 1) {
-        return alert("Mohon tentukan jumlah CPMK terlebih dahulu!");
+        Swal.fire({
+            icon: 'warning',
+            title: 'CPMK Belum Diisi',
+            text: 'Mohon tentukan jumlah CPMK terlebih dahulu!',
+            confirmButtonColor: '#0d6efd'
+        });
+        return;
     }
 
     const table = document.getElementById("assessmentRows");
@@ -352,7 +358,16 @@ function validateTotalPercentage() {
 function saveTemplate() {
     const namaMK = document.getElementById("searchMK").value.trim() || "TanpaNama";
     const jumlahCPMK = document.getElementById("jumlahCPMK").value;
-    if (!selectedJenjang) return alert("Pilih Jenjang terlebih dahulu!");
+    
+    if (!selectedJenjang) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Jenjang Kosong',
+            text: 'Pilih Jenjang terlebih dahulu sebelum menyimpan template!',
+            confirmButtonColor: '#0d6efd'
+        });
+        return;
+    }
 
     const rows = [
         ["JENJANG", selectedJenjang],
@@ -475,10 +490,22 @@ function generateCSVTemplate() {
     const assessments = document.querySelectorAll(".assessment-row");
 
     if (!jumlahMhs || jumlahMhs < 1) {
-        return alert("Masukkan jumlah mahasiswa terlebih dahulu!");
+        Swal.fire({
+            icon: 'warning',
+            title: 'Jumlah Mahasiswa Kosong',
+            text: 'Masukkan jumlah mahasiswa terlebih dahulu!',
+            confirmButtonColor: '#0d6efd'
+        });
+        return;
     }
     if (assessments.length === 0) {
-        return alert("Buat rencana asesmen terlebih dahulu agar kolom nilai tersedia!");
+        Swal.fire({
+            icon: 'warning',
+            title: 'Rencana Asesmen Kosong',
+            text: 'Buat rencana asesmen terlebih dahulu agar kolom nilai tersedia di Excel!',
+            confirmButtonColor: '#0d6efd'
+        });
+        return;
     }
 
     // Membangun Header: No, NIM, Nama, lalu Kolom Penilaian (Deskripsi/PI)
@@ -543,8 +570,14 @@ if (csvInput) {
 function generateCPMKPortfolio() {
     const fileInput = document.getElementById('csvUpload');
     const file = fileInput.files[0];
+    
     if (!file) {
-        alert('Silakan upload file CSV terlebih dahulu.');
+        Swal.fire({
+            icon: 'info',
+            title: 'File CSV Belum Ada',
+            text: 'Silakan upload file CSV nilai terlebih dahulu sebelum melakukan kalkulasi.',
+            confirmButtonColor: '#0d6efd'
+        });
         return;
     }
 
