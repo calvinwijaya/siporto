@@ -1094,7 +1094,7 @@ window.sendToSheet = async function() {
         const fdMK = new FormData();
         fdMK.append("data", JSON.stringify(payloadMK));
 
-        const resMK = await fetch("https://script.google.com/macros/s/AKfycbyspyd3xsVS_gAcYx1nOCydU2zy3FLTsVR2CxTf2TBGQ_h0j99mRdWr5lANB5DB2EAXrQ/exec", {
+        const resMK = await fetch("https://script.google.com/macros/s/AKfycbzd7dvbPnfRh5mLxKZ_gNXG5HzI5vzP6Jo00yEYa8CKSETNcXUPkMYgeUNny1whwJD8xA/exec", {
             method: "POST",
             body: fdMK
         });
