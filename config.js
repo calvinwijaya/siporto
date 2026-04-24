@@ -1,4 +1,7 @@
-// config.js
+const GAS_LOGIN = "https://script.google.com/macros/s/AKfycbzlVEuazq6Sfcr8X_g5qdy75AQ5-vONvZBTPzfZxLtMtx9Zgpppd-9T_NmbJudyEt-E3g/exec";
+const URL_GAS_CHECKER = "https://script.google.com/macros/s/AKfycbyLUzWNSqzo7nE0uCTmw_1455wMi20McOKUqOMECFw_V8R8w4zZwXom9wop2EoZTYR_CQ/exec"
+const ADMIN_EMAILS = ["calvin.wijaya@mail.ugm.ac.id", "cecep.pratama@ugm.ac.id"];
+
 // Gunakan var atau tempelkan ke window agar aman diakses antar file
 window.jenjangCPLData = {
     'S1': {

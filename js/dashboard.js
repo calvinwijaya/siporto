@@ -1,6 +1,3 @@
-const URL_GAS_CHECKER = "https://script.google.com/macros/s/AKfycbyLUzWNSqzo7nE0uCTmw_1455wMi20McOKUqOMECFw_V8R8w4zZwXom9wop2EoZTYR_CQ/exec"
-const ADMIN_EMAILS = ["calvin.wijaya@mail.ugm.ac.id", "cecep.pratama@ugm.ac.id"];
-
 Chart.register({
     id: 'centerTextPlugin',
     beforeDraw: function(chart) {
