@@ -138,15 +138,19 @@ function renderTable(rows, containerId, title, headers, averages, headerClass) {
 
     const doRender = () => {
         let html = `
-            <div class="card border-0 shadow-sm mt-3">
+            <div class="card border-0 shadow-sm mt-3 w-100">
                 <div class="card-header ${headerClass} text-white d-flex justify-content-between align-items-center">
                     <span class="fw-bold">${title}</span>
                     <button class="btn btn-light btn-sm fw-bold" onclick="window.sortRekapTable('${containerId}')">
                         <i class="bi bi-sort-alpha-down"></i> Urutkan MK
                     </button>
                 </div>
-                <div class="table-responsive">
-                    <table class="table table-hover table-sm align-middle mb-0" style="font-size: 0.85rem;">
+                <!-- 
+                     Penambahan style 'overflow-x: auto' dan 'width: 100%' 
+                     agar scroll horizontal terkunci di dalam area ini saja.
+                -->
+                <div class="table-responsive w-100" style="overflow-x: auto;">
+                    <table class="table table-hover table-sm align-middle mb-0" style="font-size: 0.85rem; min-width: 800px;">
                         <thead class="table-light">
                             <tr>${headers.map(h => `<th class="text-nowrap text-center">${h}</th>`).join('')}</tr>
                         </thead>
@@ -165,7 +169,7 @@ function renderTable(rows, containerId, title, headers, averages, headerClass) {
                         </tbody>
                         <tfoot class="table-warning fw-bold">
                             <tr>
-                                <td colspan="3" class="text-end">Rerata Capaian:</td>
+                                <td colspan="3" class="text-end text-nowrap">Rerata Capaian:</td>
                                 ${averages.map(a => `<td class="text-center">${a.value.toFixed(2)}</td>`).join('')}
                             </tr>
                         </tfoot>
